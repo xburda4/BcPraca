@@ -17,7 +17,7 @@ public class Vesselness {
 	public IcyBufferedImage ret;
 	public double[][] vesselness2D;
 	public double[][][] vesselness3D;
-	public double beta=0.5,brightThresh=7.5;
+	public double beta=2,brightThresh=3;
 	public int ampli = 1,spreadX = 2;
 	
 	public Vesselness(IcyBufferedImage source,int scale){
@@ -25,36 +25,7 @@ public class Vesselness {
 		this.scale = scale;
 	}
 	
-	
-	/*IcyBufferedImage blur2D(){
-		
-		double[] gauss2D = (new GaussianKernel()).computeGaussian(scale);
-		ret.copyData(source);
-			for(int y=0;y<ret.getHeight();y++){
-				for(int x=0;x<ret.getWidth();x++){
-					ret.setData(x, y, 0, 0);
-						for(int kX=-scale;kX<=scale;kX++){
-							if(x-kX >= 0 && x-kX < source.getWidth()){
-							ret.setData(x, y,0, ret.getData(x, y,0)+(source.getData(x-kX, y, 0)*gauss2D[scale+kX]));
-							}
-					}
-				}
-		}
-			for(int y=0;y<ret.getHeight();y++){
-			for(int x=0;x<ret.getWidth();x++){
-				ret.setData(x, y, 0, 0);
-					for(int kX=-scale;kX<=scale;kX++){
-						if(y-kX >= 0 && y-kX < source.getHeight()){
-						ret.setData(x, y,0, ret.getData(x, y,0)+(source.getData(x, y-kX, 0)*gauss2D[scale+kX]));
-						}
-				}
-			}
-	}
-			
-		return ret;
-	}*/
-	
-	public IcyBufferedImage getGrayScale(BufferedImage inputImage){
+	private IcyBufferedImage getGrayScale(BufferedImage inputImage){
 	    BufferedImage img = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
 	    Graphics g = img.getGraphics();
 	    g.drawImage(inputImage, 0, 0, null);
@@ -63,7 +34,7 @@ public class Vesselness {
 	    return IcyBufferedImage.createFrom(img);
 	}
 	
-	void computeVesselness2D(){
+	private void computeVesselness2D(){
 		Matrix hessian = new Matrix(2,2);
 		//IcyBufferedImage blurred = blur2D();
 		
@@ -106,7 +77,7 @@ public class Vesselness {
 			}
 	}
 	
-public void makeImage(){
+public void makeImage2D(){
 		computeVesselness2D();
 		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 		for(int y=0;y<source.getHeight();y++){
