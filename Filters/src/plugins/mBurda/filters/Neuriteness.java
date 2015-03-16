@@ -11,17 +11,18 @@ import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
 import icy.type.DataType;
 
-public class Neuriteness {
+public class Neuriteness{
 	private IcyBufferedImage source;
 	private int scale;
 	public IcyBufferedImage ret;
 	private double[][] neuriteness2D;
 	private double[][][] neuriteness3D;
-	private double alpha = 4;
+	private double alpha;
 	
-	public Neuriteness(IcyBufferedImage src,int scale){
+	public Neuriteness(IcyBufferedImage src,int scale,double alpha){
 		this.scale = scale;
 		this.source = src;
+		this.alpha = alpha;
 	}
 	
 	private IcyBufferedImage getGrayScale(BufferedImage inputImage){
@@ -36,8 +37,9 @@ public class Neuriteness {
 	private void computeNeuriteness2D(){
 		Matrix hessian = new Matrix(2,2);
 		
-		GaussianBlurFilter gauss = new GaussianBlurFilter(scale);
-		IcyBufferedImage blurred = getGrayScale(IcyBufferedImage.createFrom(gauss.filter(source, null)));
+		//GaussianBlurFilter gauss = new GaussianBlurFilter(scale);
+		//IcyBufferedImage blurred = getGrayScale(IcyBufferedImage.createFrom(gauss.filter(source, null)));
+		IcyBufferedImage blurred = source;
 		this.neuriteness2D = new double[source.getWidth()][source.getHeight()];
 		
 		double minEig = 0,curEig = 0;
@@ -85,4 +87,8 @@ public class Neuriteness {
 			}
 		}
 	 }
+	
+	public void setScale(int scale){
+		this.scale = scale;
+	}
 }
