@@ -29,7 +29,7 @@ public class Vesselness{
 	}
 	
 	
-	/**
+	/**Computes vesselness for 2D grayscale images. Saves it to a matrix vesselness2D
 	 * */
 	private void computeVesselness2D(){
 		Matrix hessian = new Matrix(2,2);

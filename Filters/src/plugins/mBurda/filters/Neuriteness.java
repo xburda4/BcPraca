@@ -22,7 +22,7 @@ public class Neuriteness{
 		this.alpha = alpha;
 	}
 	
-	/** Writes 2D neuriteness into the matrix
+	/** Computes neuriteness for 2D grayscale images.Saves it to a matrix neuriteness2D
 	 * */
 	private void computeNeuriteness2D(){
 		Matrix hessian = new Matrix(2,2);

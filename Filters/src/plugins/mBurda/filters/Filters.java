@@ -10,7 +10,7 @@ import icy.sequence.Sequence;
 public class Filters extends PluginActionable {
 	@Override
 	public void run() {
-
+					//rozmazanie obrazu s okolim 9
 					GaussianBlurFilter gauss = new GaussianBlurFilter(9);
 					BufferedImage blurred = getGrayScale(gauss.filter(getActiveSequence().getImage(0, 0), null));
 					
