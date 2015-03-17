@@ -1,13 +1,8 @@
 package plugins.mBurda.filters;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Point;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
-
-import org.jdesktop.swingx.image.GaussianBlurFilter;
-
 import Jama.Matrix;
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
@@ -15,56 +10,50 @@ import icy.type.DataType;
 
 
 public class Vesselness{
-	public IcyBufferedImage source;
-	private int scale = 0;
+	public BufferedImage source;
 	public IcyBufferedImage ret;
 	public double[][] vesselness2D;
 	public double[][][] vesselness3D;
 	public double beta,brightThresh;
-	//public int ampli = 1,spreadX = 2;
 	
-	public Vesselness(IcyBufferedImage source,int scale,double beta,double bright){
+	/**@param source blurred grayscale image with one channel
+	 * @param beta,bright thresholds controling sensitivity of line measurement
+	 * */
+	public Vesselness(BufferedImage source,double beta,double bright){
 		this.source = source;
-		this.scale = scale;
 		this.beta = beta;
 		this.brightThresh = bright;
 	}
-	public Vesselness(IcyBufferedImage source){
+	public Vesselness(BufferedImage source){
 		this.source = source;
 	}
 	
-	private BufferedImage getGrayScale(BufferedImage original){
-		BufferedImage image = new BufferedImage(original.getWidth(), original.getHeight(),  
-			    BufferedImage.TYPE_BYTE_GRAY);  
-			Graphics g = image.getGraphics();  
-			g.drawImage(original, 0, 0, null);  
-			g.dispose(); 
-			return image;
-	}
 	
-	private void computeVesselness2D(int scale){
+	/**
+	 * */
+	private void computeVesselness2D(){
 		Matrix hessian = new Matrix(2,2);
-		//IcyBufferedImage blurred = blur2D();
 		
-//		GaussianBlurFilter gauss = new GaussianBlurFilter(scale);
-//		BufferedImage blurred = getGrayScale(gauss.filter(source, null));
-		IcyBufferedImage blurred = source;
+		
+		WritableRaster raster = source.getRaster();
 		this.vesselness2D = new double[source.getWidth()][source.getHeight()];
-		WritableRaster raster = blurred.getRaster();
-		for(int y=0;y<blurred.getHeight();y++){
-			for(int x=0;x<blurred.getWidth();x++){
-				if(x+1<blurred.getWidth() && x-1>=0){
-					
+
+		for(int y=0;y<source.getHeight();y++){
+			for(int x=0;x<source.getWidth();x++){
+				if(x+1<source.getWidth() && x-1>=0){
+					//Horizontal approximation
 					double a = (raster.getSample(x+1, y, 0)+raster.getSample(x-1, y, 0)-2*raster.getSample(x, y, 0));
 					hessian.set(0, 0, a); 	
 				} else hessian.set(0, 0, 0);
-				if(y+1 < blurred.getHeight() && y-1>=0)
+				if(y+1 < source.getHeight() && y-1>=0)
 				{
+					//Vertical approximation
 					double a = (raster.getSample(x, y+1, 0)+raster.getSample(x, y-1, 0)-2*raster.getSample(x, y, 0));
 						hessian.set(1, 1, a);
 				} else hessian.set(1, 1, 0);
-				if(x+1<blurred.getWidth() && x-1>=0 && y+1 < blurred.getHeight() && y-1>=0)
+				if(x+1<source.getWidth() && x-1>=0 && y+1 < source.getHeight() && y-1>=0)
 				{
+					//Diagonal approximation
 					double a = (raster.getSample(x+1, y+1, 0)+raster.getSample(x-1, y-1, 0)-raster.getSample(x+1, y-1, 0)-raster.getSample(x-1, y+1, 0))/4;
 						hessian.set(0,1,a);
 				} else hessian.set(0, 1, 0);
@@ -80,15 +69,19 @@ public class Vesselness{
 					eig1= eigens[1];
 					eig2= eigens[0];
 				}
-				double a = Math.exp(-((eig1*eig1)/(2*beta*beta*eig2*eig2)));
-				double b = (1 - Math.exp(-((eig1*eig1+eig2*eig2)/2*brightThresh*brightThresh)));
-				this.vesselness2D[x][y] =  a * b;
+				double disparsity = Math.exp(-((eig1*eig1)/(2*beta*beta*eig2*eig2)));
+				double relativeBrightness = (1 - Math.exp(-((eig1*eig1+eig2*eig2)/2*brightThresh*brightThresh)));
+				this.vesselness2D[x][y] =  disparsity * relativeBrightness;
 				}
 			}
 	}
 	
+	/** Rewrites data from vesselness2D matrix to image ret.
+	 * */
+	/*program sa zaobíde bez funkcie,dá sa prepísať aj na koniec computeVesselness2D funkcie
+	 * */
 public void makeImage2D(){
-		computeVesselness2D(scale);
+		computeVesselness2D();
 		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 		for(int y=0;y<source.getHeight();y++){
 			for(int x=0;x<source.getWidth();x++){
@@ -96,8 +89,4 @@ public void makeImage2D(){
 			}
 		}
 	 }
-
-public void setScale(int scale){
-	this.scale = scale;
-}
 }
