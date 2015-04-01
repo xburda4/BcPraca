@@ -71,8 +71,8 @@ public class Vesselness{
 				}
 				double disparsity = Math.exp(-((eig1*eig1)/(2*beta*beta*eig2*eig2)));
 				double relativeBrightness = (1 - Math.exp(-((eig1*eig1+eig2*eig2)/2*brightThresh*brightThresh)));
-				//if(eig2>=0) this.vesselness2D[x][y] = 0;
-				/*else */this.vesselness2D[x][y] =  disparsity * relativeBrightness;
+				if(eig2 < 0) this.vesselness2D[x][y] = 0;
+				else this.vesselness2D[x][y] =  disparsity * relativeBrightness;
 				}
 			}
 	}

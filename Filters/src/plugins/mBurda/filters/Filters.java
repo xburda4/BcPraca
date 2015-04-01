@@ -20,13 +20,15 @@ public class Filters extends PluginActionable {
 //		GaussianBlurFilter gauss = new GaussianBlurFilter(3);
 //		BufferedImage blurred = getGrayScale(gauss.filter(getActiveSequence().getImage(0, 0), null));
 //
-//		Vesselness ves = new Vesselness(blurred,1.5,0.03);
+//		Vesselness ves = new Vesselness(blurred,1.5,0.08);
 //		ves.makeImage2D();
 //		addSequence(new Sequence("Vesselness",ves.ret));
 //
 //		Neuriteness neu = new Neuriteness(blurred,-5);
 //		neu.makeImage2D();
 //		addSequence(new Sequence("Neuriteness",neu.ret));
+		
+		
 		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
 		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
 		for(int y = 0;y<img.getRaster().getHeight();y++){
