@@ -1,6 +1,6 @@
 package plugins.mBurda.filters;
 
-import org.jdesktop.swingx.image.GaussianBlurFilter;
+//import org.jdesktop.swingx.image.GaussianBlurFilter;
 
 import flanagan.complex.Complex;
 import flanagan.complex.ComplexMatrix;
@@ -38,12 +38,11 @@ public class Computations {
 
 	
 	
-	public double[][] getGaborKernel(int radiusOfGaussian){
-		double[] gausKernel = createGaussianKernel(radiusOfGaussian);
-		
-		return null;
-	}
-	
+//	public double[][] getGaborKernel(int radiusOfGaussian){
+//		double[] gausKernel = createGaussianKernel(radiusOfGaussian);
+//		
+//		return null;
+//	}
 	
 	public static ComplexMatrix FourierTransform2D(double[][] input){//double[polohaVStlpci][polohaVRiadku]
 		if(input == null) return null;
@@ -55,17 +54,14 @@ public class Computations {
 			width *= 2;
 		}
 		ComplexMatrix output = new ComplexMatrix(height,width);
-		/*Fourierova transformácia nad každým riadkom a následne priradenie hodnôt do matice output
-		 * 
-		 * */
+		/*Fourierova transformácia nad každým riadkom a následne priradenie hodnôt do matice output*/
 		ComplexMatrix rowMatrix;
 		Complex[] tmpRow;
 		for(int y = 0;y<output.getNrow();y++){
-			tmpRow = new Complex[height];
+			tmpRow = new Complex[width];
 				for(int x = 0;x<tmpRow.length;x++){
 					if(y<input.length && x<input[y].length){
 						tmpRow[x] = new Complex(input[y][x]);
-						
 					} else {
 						tmpRow[x] = new Complex(0);
 					}
@@ -76,32 +72,18 @@ public class Computations {
 				for(int x = 0;x<output.getNcol();x++){
 					output.setElement(y, x, rowMatrix.getElementCopy(0, x));
 					}
-			
 		}
-		/*tmp je output matica otočená o 90 stupňov*/
-		ComplexMatrix tmp = new ComplexMatrix(output.getNcol(), output.getNrow());
-		for(int y = 0;y<output.getNrow();y++){
-			for(int x=0;x<output.getNcol();x++){
-				tmp.setElement(x, y, output.getElementCopy(y, x));
-			}
-		}
-		tmpRow = new Complex[tmp.getNrow()];
+		tmpRow = new Complex[output.getNrow()];
 		//výpočet FFT nad stĺpcami
-		for(int y = 0;y<tmp.getNcol();y++){
-			for(int x = 0;x<tmp.getNrow();x++){
-				tmpRow[x] = tmp.getElementCopy(x,y);
+		for(int x = 0;x<output.getNcol();x++){
+			for(int y = 0;y<output.getNrow();y++){
+				tmpRow[y] = output.getElementCopy(y,x);
 			}
 			FourierTransform fourierHorizontal = new FourierTransform(tmpRow);
 			fourierHorizontal.transform();
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal.getTransformedDataAsComplex());
-			for(int x = 0;x<tmp.getNrow();x++){
-				tmp.setElement(x, y, rowMatrix.getElementCopy(0, x));
-			}
-		}
-		//priradenie do output
-		for(int y=0;y<output.getNcol();y++){
-			for(int x=0;x<output.getNrow();x++){
-				output.setElement(x, y, tmp.getElementCopy(x, y));
+			for(int y = 0;y<output.getNrow();y++){
+				output.setElement(y, x, rowMatrix.getElementCopy(0, y));
 			}
 		}
 		return output;
@@ -112,43 +94,39 @@ public class Computations {
 		/*Fourierova transformácia nad každým riadkom a následne priradenie hodnôt do matice output
 		 */
 		ComplexMatrix rowMatrix;
-		Complex[] tmpRow = new Complex[input.getNrow()];
-		for(int y = 0;y<input.getNcol();y++){
-			for(int x = 0;x<input.getNrow();x++){
-				tmpRow[x] = input.getElementCopy(x,y);
+		Complex[] tmpRow = new Complex[input.getNcol()];
+		for(int y = 0;y<input.getNrow();y++){
+			for(int x = 0;x<input.getNcol();x++){
+				tmpRow[x] = input.getElementCopy(y,x);
 			}
 			FourierTransform fourierHorizontal = new FourierTransform(tmpRow);
 			fourierHorizontal.inverse();
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal.getTransformedDataAsComplex());
-			for(int x = 0;x<rowMatrix.getNrow();x++){
-				input.setElement(x, y, rowMatrix.getElementCopy(0, x));
+			for(int x = 0;x<rowMatrix.getNcol();x++){
+				input.setElement(y, x, rowMatrix.getElementCopy(0, x));
+			//	input.setElement(x, y, input.getElementCopy(x, y).getReal()/rowMatrix.getNrow(), input.getElementCopy(x, y).getImag()/rowMatrix.getNrow());
 			}
 		}
-		/*tmp je output matica otočená o 90 stupňov*/
-		ComplexMatrix tmp = new ComplexMatrix(input.getNcol(), input.getNrow());
-		for(int y = 0;y<input.getNcol();y++){
-			for(int x=0;x<input.getNrow();x++){
-				tmp.setElement(y, x, input.getElementCopy(x,y));
-			}
-		}
-		tmpRow = new Complex[tmp.getNrow()];
+		double[][] output = new double[input.getNrow()][input.getNcol()];
+		tmpRow = new Complex[input.getNrow()];
 		//výpočet FFT nad stĺpcami
-		for(int y = 0;y<tmp.getNcol();y++){
-			for(int x = 0;x<tmp.getNrow();x++){
-				tmpRow[x] = tmp.getElementCopy(x,y);
+		for(int x = 0;x<input.getNcol();x++){
+			for(int y = 0;y<input.getNrow();y++){
+				tmpRow[y] = input.getElementCopy(y, x);
 			}
 			FourierTransform fourierHorizontal=new FourierTransform(tmpRow);
 			fourierHorizontal.inverse();
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal.getTransformedDataAsComplex());
-			for(int x = 0;x<rowMatrix.getNrow();x++){
-				tmp.setElement(x, y, rowMatrix.getElementCopy(0, x));
+			for(int y = 0;y<input.getNrow();y++){
+				input.setElement(y, x, rowMatrix.getElementCopy(0, y));
+		//		input.setElement(x, y, input.getElementCopy(x, y).getReal()/rowMatrix.getNrow(), input.getElementCopy(x, y).getImag()/rowMatrix.getNrow());
 			}
 		}
 		//priradenie do output
-		double[][] output = new double[input.getNcol()][input.getNrow()];
-		for(int y=0;y<output.length;y++){
-			for(int x=0;x<output[y].length;x++){
-				output[y][x] = tmp.getElementCopy(x, y).getReal();
+		
+		for(int y=0;y<input.getNrow();y++){
+			for(int x=0;x<input.getNcol();x++){
+				output[y][x] = input.getElementCopy(y, x).getReal();
 			}
 		}
 		return output;

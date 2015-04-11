@@ -13,13 +13,16 @@ public class Neuriteness{
 	private double[][] neuriteness2D;
 	private double[][][] neuriteness3D;
 	private double alpha;
-	
+	public double[][] imageX;
+	public double[][] imageY;
 	/**@param src grayscale blurred image with one channel
-	 * @param alpha 
+	 * @param alpha float
 	 * */
 	public Neuriteness(BufferedImage src,double alpha){
 		this.source = src;
 		this.alpha = alpha;
+		imageX = new double[source.getWidth()][source.getHeight()];
+		imageY = new double[source.getWidth()][source.getHeight()];
 	}
 	
 	/** Computes neuriteness for 2D grayscale images.Saves it to a matrix neuriteness2D
@@ -86,4 +89,19 @@ public class Neuriteness{
 			}
 		}
 	 }
+	
+//	public void steerFilter(int sigma){
+//		for(int y=0;y<source.getHeight();y++){
+//			for(int x=0;x<source.getWidth();x++){
+//				for(int xx = 0;xx<2*sigma+1;xx++){
+//					double g = Math.exp(-(xx*xx)/(2*sigma*sigma));
+//					double gp =  -(xx/sigma)*Math.exp(-(xx*xx)/(2*sigma*sigma));
+//					
+//					imageX[x][y] = ;
+//					imageY[x][y] = ;
+//		}
+//			}
+//			}
+//		
+//	}
 }

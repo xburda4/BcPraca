@@ -6,6 +6,8 @@ import java.awt.image.BufferedImage;
 
 import org.jdesktop.swingx.image.GaussianBlurFilter;
 
+import flanagan.complex.ComplexMatrix;
+
 import icy.gui.dialog.MessageDialog;
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
@@ -36,7 +38,8 @@ public class Filters extends PluginActionable {
 				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
 			}
 		}
-		image = Computations.InverseFourierTransform2D(Computations.FourierTransform2D(image));
+		ComplexMatrix matrix= Computations.FourierTransform2D(image);
+		image = Computations.InverseFourierTransform2D(matrix);
 		addSequence(new Sequence("FFT",makeImage2D(image)));
 		
 		MessageDialog.showDialog("Filt is done !");
