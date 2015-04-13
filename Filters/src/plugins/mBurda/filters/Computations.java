@@ -10,7 +10,7 @@ public class Computations {
 	
 	/**Method from swingx.image.GaussianBlurFilter
 	 * */
-	static double[] createGaussianKernel(int radius) {
+	/*static double[] createGaussianKernel(int radius) {
         if (radius < 1) {
             throw new IllegalArgumentException("Radius must be >= 1");
         }
@@ -34,15 +34,38 @@ public class Computations {
         }
 
         return data;
-    }
+    }*/
 
+	public static double[][] getGaborKernel(int radius,double wavelength,double angle){
+		return getGaborKernel(radius, wavelength,angle,10,0.75);
+	}
 	
-	
-//	public double[][] getGaborKernel(int radiusOfGaussian){
-//		double[] gausKernel = createGaussianKernel(radiusOfGaussian);
-//		
-//		return null;
-//	}
+	public static double[][] getGaborKernel(int radius,double wavelength,double angle,double sigmaOnf,double thetaSigma){
+		//double[] gausKernel = createGaussianKernel(radiusOfGaussian);
+		double centerFreq = 1.0/wavelength;
+		double radialComp;
+		double[][] kernel2D = new double[2*radius+1][2*radius+1];
+		for(int x=-radius;x<radius;x++){
+			for(int y=-radius;y<radius;y++){
+			double position = Math.sqrt(x*x+y*y);
+			radialComp = Math.exp(-((Math.log(position/centerFreq)*(Math.log(position/centerFreq)))/(2*Math.log(sigmaOnf)*Math.log(sigmaOnf))));
+			kernel2D[y+radius][x+radius] = radialComp;
+			}
+		}
+		double theta,ds,dc,angulComp,dtheta;
+		for(int x=-radius;x<radius;x++){
+			for(int y=-radius+1;y<radius;y++){
+				theta = Math.atan2(-y, x);
+				ds = Math.sin(theta)*Math.cos(angle)-Math.cos(theta)*Math.sin(angle);
+				dc = Math.cos(theta)*Math.cos(angle)+Math.sin(theta)*Math.sin(angle);
+				dtheta = Math.abs(Math.atan2(ds, dc));
+				angulComp = Math.exp(-(dtheta*dtheta)/(2*thetaSigma*thetaSigma));
+				kernel2D[y+radius][x+radius] = kernel2D[y+radius][x+radius] * angulComp;
+				kernel2D[y+radius][x+radius] = (kernel2D[y+radius][x+radius]>0)?kernel2D[y+radius][x+radius]:0;
+			}
+		}
+		return kernel2D;
+	}
 	
 	public static ComplexMatrix FourierTransform2D(double[][] input){//double[polohaVStlpci][polohaVRiadku]
 		if(input == null) return null;
@@ -104,7 +127,6 @@ public class Computations {
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal.getTransformedDataAsComplex());
 			for(int x = 0;x<rowMatrix.getNcol();x++){
 				input.setElement(y, x, rowMatrix.getElementCopy(0, x));
-			//	input.setElement(x, y, input.getElementCopy(x, y).getReal()/rowMatrix.getNrow(), input.getElementCopy(x, y).getImag()/rowMatrix.getNrow());
 			}
 		}
 		double[][] output = new double[input.getNrow()][input.getNcol()];
@@ -119,7 +141,7 @@ public class Computations {
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal.getTransformedDataAsComplex());
 			for(int y = 0;y<input.getNrow();y++){
 				input.setElement(y, x, rowMatrix.getElementCopy(0, y));
-		//		input.setElement(x, y, input.getElementCopy(x, y).getReal()/rowMatrix.getNrow(), input.getElementCopy(x, y).getImag()/rowMatrix.getNrow());
+		
 			}
 		}
 		//priradenie do output

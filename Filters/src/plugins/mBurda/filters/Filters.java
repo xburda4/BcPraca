@@ -31,16 +31,18 @@ public class Filters extends PluginActionable {
 //		addSequence(new Sequence("Neuriteness",neu.ret));
 		
 		
-		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
-		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
-		for(int y = 0;y<img.getRaster().getHeight();y++){
-			for(int x=0;x<img.getRaster().getWidth();x++){
-				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
-			}
-		}
-		ComplexMatrix matrix= Computations.FourierTransform2D(image);
-		image = Computations.InverseFourierTransform2D(matrix);
-		addSequence(new Sequence("FFT",makeImage2D(image)));
+//		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
+//		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
+//		for(int y = 0;y<img.getRaster().getHeight();y++){
+//			for(int x=0;x<img.getRaster().getWidth();x++){
+//				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
+//			}
+//		}
+//		ComplexMatrix matrix= Computations.FourierTransform2D(image);
+//		image = Computations.InverseFourierTransform2D(matrix);
+//		addSequence(new Sequence("FFT",makeImage2D(image)));
+		
+		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(100,1,0))));
 		
 		MessageDialog.showDialog("Filt is done !");
 	}
