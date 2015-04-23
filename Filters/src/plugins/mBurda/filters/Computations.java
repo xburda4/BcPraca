@@ -8,66 +8,34 @@ import flanagan.math.FourierTransform;
 
 public class Computations {
 	
-	/**Method from swingx.image.GaussianBlurFilter
-	 * */
-	/*static double[] createGaussianKernel(int radius) {
-        if (radius < 1) {
-            throw new IllegalArgumentException("Radius must be >= 1");
-        }
-
-        double[] data = new double[radius * 2 + 1];
-
-        float sigma = radius / 3.0f;
-        float twoSigmaSquare = 2.0f * sigma * sigma;
-        float sigmaRoot = (float) Math.sqrt(twoSigmaSquare * Math.PI);
-        float total = 0.0f;
-
-        for (int i = -radius; i <= radius; i++) {
-            float distance = i * i;
-            int index = i + radius;
-            data[index] = (float) Math.exp(-distance / twoSigmaSquare) / sigmaRoot;
-            total += data[index];
-        }
-
-        for (int i = 0; i < data.length; i++) {
-            data[i] /= total;
-        }
-
-        return data;
-    }*/
-
 	public static double[][] getGaborKernel(int radius,double wavelength,double angle){
-		return getGaborKernel(radius, wavelength,angle,10,0.75);
+		return getGaborKernel(radius, wavelength,angle,8.5,0.75);
 	}
 	
 	public static double[][] getGaborKernel(int radius,double wavelength,double angle,double sigmaOnf,double thetaSigma){
-		//double[] gausKernel = createGaussianKernel(radiusOfGaussian);
+		angle = angle*Math.PI/180;
 		double centerFreq = 1.0/wavelength;
 		double radialComp;
 		double[][] kernel2D = new double[2*radius+1][2*radius+1];
-		for(int x=-radius;x<radius;x++){
-			for(int y=-radius;y<radius;y++){
-			double position = Math.sqrt(x*x+y*y);
-			radialComp = Math.exp(-((Math.log(position/centerFreq)*(Math.log(position/centerFreq)))/(2*Math.log(sigmaOnf)*Math.log(sigmaOnf))));
-			kernel2D[y+radius][x+radius] = radialComp;
-			}
-		}
 		double theta,ds,dc,angulComp,dtheta;
 		for(int x=-radius;x<radius;x++){
-			for(int y=-radius+1;y<radius;y++){
+			for(int y=-radius;y<radius;y++){
+				double position = Math.sqrt(x*x+y*y);
+				radialComp = Math.exp((-(Math.log(position/centerFreq)*(Math.log(position/centerFreq)))/(2*((Math.log(sigmaOnf)*Math.log(sigmaOnf))))));
+				kernel2D[y+radius][x+radius] = radialComp;
+				
 				theta = Math.atan2(-y, x);
 				ds = Math.sin(theta)*Math.cos(angle)-Math.cos(theta)*Math.sin(angle);
 				dc = Math.cos(theta)*Math.cos(angle)+Math.sin(theta)*Math.sin(angle);
 				dtheta = Math.abs(Math.atan2(ds, dc));
-				angulComp = Math.exp(-(dtheta*dtheta)/(2*thetaSigma*thetaSigma));
+				angulComp = Math.exp(-(dtheta*dtheta)/(2*(thetaSigma*thetaSigma)));
 				kernel2D[y+radius][x+radius] = kernel2D[y+radius][x+radius] * angulComp;
-				kernel2D[y+radius][x+radius] = (kernel2D[y+radius][x+radius]>0)?kernel2D[y+radius][x+radius]:0;
 			}
 		}
 		return kernel2D;
 	}
 	
-	public static ComplexMatrix FourierTransform2D(double[][] input){//double[polohaVStlpci][polohaVRiadku]
+	public static ComplexMatrix FourierTransform2D(double[][] input){
 		if(input == null) return null;
 		int height=1,width=1;
 		while(height < input.length){

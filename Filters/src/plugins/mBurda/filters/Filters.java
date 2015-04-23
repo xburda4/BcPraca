@@ -42,7 +42,7 @@ public class Filters extends PluginActionable {
 //		image = Computations.InverseFourierTransform2D(matrix);
 //		addSequence(new Sequence("FFT",makeImage2D(image)));
 		
-		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(100,1,0))));
+		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(100,0.08,0,1.2,0.25))));
 		
 		MessageDialog.showDialog("Filt is done !");
 	}
