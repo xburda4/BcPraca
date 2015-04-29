@@ -39,10 +39,13 @@ public class Filters extends PluginActionable {
 //			}
 //		}
 //		ComplexMatrix matrix= Computations.FourierTransform2D(image);
+		//image = Computations.InverseFourierTransform2D(matrix);
+		//addSequence(new Sequence("FFT",makeImage2D(image)));
+		
+		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(/*matrix.getNrow(),matrix.getNcol()*/150,100,0.03,90,1.2,0.25))));
+		
 //		image = Computations.InverseFourierTransform2D(matrix);
 //		addSequence(new Sequence("FFT",makeImage2D(image)));
-		
-		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(100,0.08,0,1.2,0.25))));
 		
 		MessageDialog.showDialog("Filt is done !");
 	}
