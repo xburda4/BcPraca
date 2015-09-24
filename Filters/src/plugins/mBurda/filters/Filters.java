@@ -31,18 +31,20 @@ public class Filters extends PluginActionable {
 //		addSequence(new Sequence("Neuriteness",neu.ret));
 		
 		
-//		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
-//		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
-//		for(int y = 0;y<img.getRaster().getHeight();y++){
-//			for(int x=0;x<img.getRaster().getWidth();x++){
-//				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
-//			}
-//		}
-//		ComplexMatrix matrix= Computations.FourierTransform2D(image);
-		//image = Computations.InverseFourierTransform2D(matrix);
-		//addSequence(new Sequence("FFT",makeImage2D(image)));
+		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
+		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
+		for(int y = 0;y<img.getRaster().getHeight();y++){
+			for(int x=0;x<img.getRaster().getWidth();x++){
+				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
+			}
+		}
+		ComplexMatrix matrix = Computations.FourierTransform2D(image,true);
+//		image = Computations.InverseFourierTransform2D(matrix);
+//	    addSequence(new Sequence("FFT",makeImage2D(image)));
+
+		addSequence(new Sequence("FTT",makeImage2D(Computations.fttToDoubleArr(matrix))));
 		
-		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(/*matrix.getNrow(),matrix.getNcol()*/150,100,0.03,90,1.2,0.25))));
+//		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(/*matrix.getNrow(),matrix.getNcol()*/150,100,0.03,90,1.2,0.25))));
 		
 //		image = Computations.InverseFourierTransform2D(matrix);
 //		addSequence(new Sequence("FFT",makeImage2D(image)));
@@ -51,12 +53,21 @@ public class Filters extends PluginActionable {
 	}
 
 	public IcyBufferedImage makeImage2D(double[][] source){
+		long start = System.nanoTime();
 		IcyBufferedImage ret = new IcyBufferedImage(source[0].length,source.length,IcyColorModel.createInstance(1, DataType.DOUBLE));
-		for(int y=0;y<source.length;y++){
+		
+		//Without this,it would take forever
+		ret.beginUpdate();
+		
+		for(int y=0;y< source.length;y++){
 			for(int x=0;x<source[y].length;x++){
 				ret.setData(x, y, 0, source[y][x]);
 			}
 		}
+		ret.endUpdate();
+		
+		System.out.println("Time of making an image is " + (System.nanoTime() - start));
+		
 		return ret;
 	 }
 	

@@ -211,7 +211,7 @@ public class Computations {
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal
 					.getTransformedDataAsComplex());
 			for (int x = 0; x < output.getNcol(); x++) {
-				output.setElement(y, x, rowMatrix.getElementCopy(0, x));
+				output.setElement(y, (x+output.getNcol()/2)%output.getNcol(), rowMatrix.getElementCopy(0, x));
 			}
 		}
 		tmpRow = new Complex[output.getNrow()];
@@ -225,7 +225,7 @@ public class Computations {
 			rowMatrix = ComplexMatrix.rowMatrix(fourierHorizontal
 					.getTransformedDataAsComplex());
 			for (int y = 0; y < output.getNrow(); y++) {
-				output.setElement(y, x, rowMatrix.getElementCopy(0, y));
+				output.setElement(y, x, rowMatrix.getElementCopy(0, (y+rowMatrix.getNcol()/2)%rowMatrix.getNcol()));
 				if (isAlt) {
 					real = output.getElementCopy(y, x).getReal();
 					img = output.getElementCopy(y, x).getImag();
@@ -239,6 +239,18 @@ public class Computations {
 		return output;
 	}
 
+	public static double[][] fttToDoubleArr(ComplexMatrix input){
+		if (input == null)
+			return null;
+		double[][] output = new double[input.getNrow()][input.getNcol()];
+		for (int y = 0; y < input.getNrow(); y++) {
+			for (int x = 0; x < input.getNcol(); x++) {
+				output[y][x] = input.getElementCopy(y, x).getReal();
+			}
+		}
+		return output;
+	}
+	
 	public static double[][] InverseFourierTransform2D(ComplexMatrix input) {
 		if (input == null)
 			return null;
