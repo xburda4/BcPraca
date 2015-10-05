@@ -42,9 +42,9 @@ public class Filters extends PluginActionable {
 //		image = Computations.InverseFourierTransform2D(matrix);
 //	    addSequence(new Sequence("FFT",makeImage2D(image)));
 
-		addSequence(new Sequence("FTT",makeImage2D(Computations.fttToDoubleArr(matrix))));
-		
-//		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(/*matrix.getNrow(),matrix.getNcol()*/150,100,0.03,90,1.2,0.25))));
+//		addSequence(new Sequence("FTT",makeImage2D(Computations.fttToDoubleArr(matrix))));
+		addSequence(new Sequence("Multiplied",makeImage2D(Computations.multiFTKernel(matrix, 0.03, 90)[0])));
+//		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(/*matrix.getNrow(),matrix.getNcol()*/150,100,0.03,0,1.2,0.25))));
 		
 //		image = Computations.InverseFourierTransform2D(matrix);
 //		addSequence(new Sequence("FFT",makeImage2D(image)));

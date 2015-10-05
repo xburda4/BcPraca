@@ -75,7 +75,7 @@ public class Computations {
 		double logGabPoint;
 		for(int y=0;y<ftImg.getNrow();y++){
 			for(int x=0;x<ftImg.getNcol();x++){
-				logGabPoint = getLogGaborKernelPoint(x, y, scale, angle);
+				logGabPoint = getLogGaborKernelPoint(x - ftImg.getNcol()/2,y - ftImg.getNrow()/2, scale, angle);
 				//možné použitie fcie getLogGaborKernel() pred cyklom
 				output[0][y][x] = logGabPoint * ftImg.getElementCopy(y, x).getReal();
 				output[1][y][x] = logGabPoint * ftImg.getElementCopy(y, x).getImag();
@@ -297,5 +297,4 @@ public class Computations {
 		}
 		return output;
 	}
-
 }
