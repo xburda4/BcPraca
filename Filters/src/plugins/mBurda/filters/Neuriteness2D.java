@@ -7,22 +7,17 @@ import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
 import icy.type.DataType;
 
-public class Neuriteness{
+public class Neuriteness2D{
 	private BufferedImage source;
 	public IcyBufferedImage ret;
 	private double[][] neuriteness2D;
-	private double[][][] neuriteness3D;
 	private double alpha;
-	public double[][] imageX;
-	public double[][] imageY;
 	/**@param src grayscale blurred image with one channel
 	 * @param alpha float
 	 * */
-	public Neuriteness(BufferedImage src,double alpha){
+	public Neuriteness2D(BufferedImage src,double alpha){
 		this.source = src;
 		this.alpha = alpha;
-		imageX = new double[source.getWidth()][source.getHeight()];
-		imageY = new double[source.getWidth()][source.getHeight()];
 	}
 	
 	/** Computes neuriteness for 2D grayscale images.Saves it to a matrix neuriteness2D
@@ -54,6 +49,7 @@ public class Neuriteness{
 				} else hessian.set(0, 1, 0);
 				hessian.set(1, 0, hessian.get(0,1));
 				
+				
 				double[] eigens = hessian.eig().getRealEigenvalues();
 				
 				double psi1 = eigens[0]+alpha*eigens[1];
@@ -83,11 +79,13 @@ public class Neuriteness{
 	public void makeImage2D(){
 		computeNeuriteness2D();
 		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+		ret.beginUpdate();
 		for(int y=0;y<source.getHeight();y++){
 			for(int x=0;x<source.getWidth();x++){
 				ret.setData(x, y, 0, neuriteness2D[x][y]);
 			}
 		}
+		ret.endUpdate();
 	 }
 	
 //	public void steerFilter(int sigma){

@@ -84,12 +84,12 @@ public class Computations {
 		return output;
 	}
 	
-	public static double getPhaseCong(ComplexMatrix ftImg, double[] scales,
+	public static double[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
 			double[] orientations, double threshold, double cutoffValue,
 			double gainFactor) {
 		if(ftImg == null || scales == null || orientations == null) {
 			MessageDialog.showDialog("Incorrect argument");
-			return 0;
+			return null;
 		}
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
@@ -113,7 +113,9 @@ public class Computations {
 						sumOfAmplis+=componentSO[orients][scs][0][y][x];
 						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
 						else Amax = Math.max(Amax,componentSO[orients][scs][0][y][x]);
+						meanPhase += componentSO[orients][scs][1][y][x];
 					}
+					meanPhase /= scales.length;
 					
 					for (int scs = 0; scs < scales.length; scs++) {
 						if(componentSO[orients][scs][0][y][x] == 0){
@@ -136,35 +138,9 @@ public class Computations {
 				}
 			}
 		}
-		return 0;
+		return phaseCongMatrix;
 	}
 
-	// public static double[][] getPhaseCongMatrix(ComplexMatrix ftImg,double[]
-	// scales,double[] orientations,double threshold,double cutoffValue,double
-	// gainFactor){
-	// double[][] output = new double[ftImg.getNrow()][ftImg.getNcol()];
-	// double phaseCong = 0,amplitude,deltaPhi,sumOfAmplis = 0;
-	// for(int y=0;y<ftImg.getNrow();y++){
-	// for(int x=0;x<ftImg.getNcol();x++){
-	// for(int o=0;o<orientations.length;o++){
-	//
-	// for(int s=0;s<scales.length;s++){
-	// amplitude = getLogGaborKernelPoint(x, y, scales[s], orientations[o]) *
-	// ftImg.getElementCopy(y, x).getReal();
-	// deltaPhi = Math.cos(ftImg.getElementCopy(y,
-	// x).getImag()-TBD)-Math.sin(ftImg.getElementCopy(y, x).getImag()-TBD);
-	// if(amplitude*deltaPhi-threshold<0) continue;
-	// for(int i=0;i<scales.length;i++){
-	// sumOfAmplis += ;
-	// }
-	// }
-	// output[y][x] += phaseCong;
-	// }
-	// }
-	// }
-	//
-	// return null;
-	// }
 
 	public static ComplexMatrix FourierTransform2D(BufferedImage img,
 			boolean isAlt) {
@@ -239,30 +215,44 @@ public class Computations {
 		return output;
 	}
 
-	public static double[][] fttToDoubleArr(ComplexMatrix input){
+	public static double[][] fttToDoubleArr(ComplexMatrix input,boolean isAlt){
 		if (input == null)
 			return null;
 		double[][] output = new double[input.getNrow()][input.getNcol()];
 		for (int y = 0; y < input.getNrow(); y++) {
 			for (int x = 0; x < input.getNcol(); x++) {
+				if(isAlt)
 				output[y][x] = input.getElementCopy(y, x).getReal();
+				else output[y][x] = input.getElementCopy(y, x).getImag();
 			}
 		}
 		return output;
 	}
 	
-	public static double[][] InverseFourierTransform2D(ComplexMatrix input) {
+	public static double[][] InverseFourierTransform2D(ComplexMatrix input,boolean isAlt) {
 		if (input == null)
 			return null;
+		
 		/*
 		 * Fourierova transformácia nad každým riadkom a následne priradenie
 		 * hodnôt do matice output
 		 */
+		double[][] output = new double[input.getNrow()][input.getNcol()];
+		
+		if(isAlt){
+			for (int y = 0; y < input.getNrow(); y++) {
+				for (int x = 0; x < input.getNcol(); x++) {
+					output[(y+input.getNrow()/2)%input.getNrow()][(x+input.getNcol()/2)%input.getNcol()] = input.getElementCopy(y, x).getReal()*Math.exp(input.getElementCopy(y, x).getImag());
+				}	
+			}
+		}
+		
+		
 		ComplexMatrix rowMatrix;
 		Complex[] tmpRow = new Complex[input.getNcol()];
 		for (int y = 0; y < input.getNrow(); y++) {
 			for (int x = 0; x < input.getNcol(); x++) {
-				tmpRow[x] = input.getElementCopy(y, x);
+				tmpRow[x] = input.getElementCopy(y, (x+input.getNcol()/2)%input.getNcol());
 			}
 			FourierTransform fourierHorizontal = new FourierTransform(tmpRow);
 			fourierHorizontal.inverse();
@@ -272,12 +262,12 @@ public class Computations {
 				input.setElement(y, x, rowMatrix.getElementCopy(0, x));
 			}
 		}
-		double[][] output = new double[input.getNrow()][input.getNcol()];
+		
 		tmpRow = new Complex[input.getNrow()];
 		// výpočet FFT nad stĺpcami
 		for (int x = 0; x < input.getNcol(); x++) {
 			for (int y = 0; y < input.getNrow(); y++) {
-				tmpRow[y] = input.getElementCopy(y, x);
+				tmpRow[y] = input.getElementCopy((y+input.getNrow()/2)%input.getNrow(), x);
 			}
 			FourierTransform fourierHorizontal = new FourierTransform(tmpRow);
 			fourierHorizontal.inverse();
