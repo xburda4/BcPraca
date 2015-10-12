@@ -18,9 +18,11 @@ import icy.type.DataType;
 public class Filters extends PluginActionable {
 	@Override
 	public void run() {
-		//rozmazanie obrazu s okolim 5
-//		GaussianBlurFilter gauss = new GaussianBlurFilter(3);
-//		BufferedImage blurred = getGrayScale(gauss.filter(getActiveSequence().getImage(0, 0), null));
+		System.out.println("Depth is " + getActiveSequence().getSizeT() );
+		
+		//rozmazanie obrazu s okolim 
+//		GaussianBlurFilter gauss = new GaussianBlurFilter(5);
+//		BufferedImage img = getGrayScale(gauss.filter(getActiveSequence().getImage(0, 0), null));
 //
 //		Vesselness ves = new Vesselness(blurred,1.5,0.08);
 //		ves.makeImage2D();
@@ -31,23 +33,33 @@ public class Filters extends PluginActionable {
 //		addSequence(new Sequence("Neuriteness",neu.ret));
 		
 		
-		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
-		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
-		for(int y = 0;y<img.getRaster().getHeight();y++){
-			for(int x=0;x<img.getRaster().getWidth();x++){
-				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
-			}
-		}
-		ComplexMatrix matrix = Computations.FourierTransform2D(image,true);
-//		image = Computations.InverseFourierTransform2D(matrix);
-//	    addSequence(new Sequence("FFT",makeImage2D(image)));
-
-//		addSequence(new Sequence("FTT",makeImage2D(Computations.fttToDoubleArr(matrix))));
-		addSequence(new Sequence("Multiplied",makeImage2D(Computations.multiFTKernel(matrix, 0.03, 90)[0])));
-//		addSequence(new Sequence("LogGaborKernel",makeImage2D(Computations.getGaborKernel(/*matrix.getNrow(),matrix.getNcol()*/150,100,0.03,0,1.2,0.25))));
+//		BufferedImage img = getGrayScale(getActiveSequence().getImage(0, 0));
+//		
+//		
+//		double[][] image = new double[img.getRaster().getHeight()][img.getRaster().getWidth()];
+//		for(int y = 0;y<img.getRaster().getHeight();y++){
+//			for(int x=0;x<img.getRaster().getWidth();x++){
+//				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
+//			}
+//		}
+//		ComplexMatrix matrix = Computations.FourierTransform2D(image,false);
+//		double[] scs = {0.0015,0.02,0.05};
+//		double[] ors = {0,90,180,270};
+//		
+//		
+//		
+//		Vesselness ves = new Vesselness(img,1.5,0.08);
+//		ves.phaseCong = Computations.getPhaseCong(matrix, scs, ors, 2, 5, 4);
+//		
+//		addSequence(new Sequence("Final Phase Cong",makeImage2D(ves.phaseCong)));
+//		addSequence(new Sequence("invFTT",makeImage2D(Computations.InverseFourierTransform2D(matrix, true))));
+//		
+//		addSequence(new Sequence("Magnitude",makeImage2D(Computations.fttToDoubleArr(matrix,true))));
+//		addSequence(new Sequence("Phase",makeImage2D(Computations.fttToDoubleArr(matrix, false))));
 		
-//		image = Computations.InverseFourierTransform2D(matrix);
-//		addSequence(new Sequence("FFT",makeImage2D(image)));
+//		ves.makeImage2D();
+//		addSequence(new Sequence("Final product - Vesselness",ves.ret));
+
 		
 		MessageDialog.showDialog("Filt is done !");
 	}
@@ -74,8 +86,8 @@ public class Filters extends PluginActionable {
 	private BufferedImage getGrayScale(BufferedImage original){
 		BufferedImage image = new BufferedImage(original.getWidth(), original.getHeight(),
 				BufferedImage.TYPE_BYTE_GRAY);  
-		Graphics g = image.getGraphics();  
-		g.drawImage(original, 0, 0, null);  
+		Graphics g = image.getGraphics();
+		g.drawImage(original, 0, 0, null);
 		g.dispose(); 
 		return image;
 	}

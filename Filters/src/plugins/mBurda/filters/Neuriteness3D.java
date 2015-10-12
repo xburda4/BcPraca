@@ -1,7 +1,9 @@
 package plugins.mBurda.filters;
 
 
+import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
+
 import Jama.Matrix;
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
@@ -31,9 +33,9 @@ public class Neuriteness3D{
 	}
 	
 	
-	/**Computes vesselness for 3D grayscale images. Saves it to a matrix vesselness2D
+	/**Computes neuriteness for 3D grayscale images. Saves it to a matrix vesselness3D
 	 * */
-	private void computeNeuriteness3D(){
+	private void computeNeuriteness(){
 		Matrix hessian = new Matrix(3,3);
 		
 		
@@ -119,15 +121,26 @@ public class Neuriteness3D{
 	/*program sa zaobíde bez funkcie,dá sa prepísať aj na koniec computeVesselness2D funkcie
 	 * */
 public void makeImage(){
-		computeNeuriteness3D();
-		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+		computeNeuriteness();
+		ret = new Sequence();
+		BufferedImage img = null;
+		WritableRaster ras = null;
 		ret.beginUpdate();
-		for(int z=0;z<source.getSizeT();z++)
-			for(int y=0;y<source.getHeight();y++){
-				for(int x=0;x<source.getWidth();x++){
-					ret.setData(x, y, 0, neuriteness3D[z][x][y]);
-				}
+		for(int z=0;z<source.getSizeT();z++){
+			
+			img = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+			
+			ras = img.getRaster();
+				for(int y=0;y<source.getHeight();y++){
+					for(int x=0;x<source.getWidth();x++){
+				ras.setSample(x, y, 0, neuriteness3D[z][x][y]);
+					}
+			}
+		
+			ret.addImage(img);
+			
+			
 			}
 		ret.endUpdate();
-	 }
+		}
 }

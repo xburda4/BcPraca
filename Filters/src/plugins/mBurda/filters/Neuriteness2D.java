@@ -22,7 +22,7 @@ public class Neuriteness2D{
 	
 	/** Computes neuriteness for 2D grayscale images.Saves it to a matrix neuriteness2D
 	 * */
-	private void computeNeuriteness2D(){
+	private void computeNeuriteness(){
 		Matrix hessian = new Matrix(2,2);
 		
 		this.neuriteness2D = new double[source.getWidth()][source.getHeight()];
@@ -77,7 +77,7 @@ public class Neuriteness2D{
 	/** Rewrites data from neuriteness2D matrix to image ret.
 	 * */
 	public void makeImage2D(){
-		computeNeuriteness2D();
+		computeNeuriteness();
 		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 		ret.beginUpdate();
 		for(int y=0;y<source.getHeight();y++){

@@ -1,6 +1,7 @@
 package plugins.mBurda.filters;
 
 
+import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import Jama.Matrix;
 import icy.image.IcyBufferedImage;
@@ -10,8 +11,8 @@ import icy.type.DataType;
 
 
 public class Vesselness3D{
-	private Sequence source;
-	public IcyBufferedImage ret;
+	public Sequence source;
+	public Sequence ret;
 	public double[][][] vesselness3D;
 	public double beta,brightThresh,gamma;
 	public double[][][] phaseCong;
@@ -110,14 +111,25 @@ public class Vesselness3D{
 	 * */
 public void makeImage(){
 		computeVesselness();
-		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+		ret = new Sequence();
+		BufferedImage img = null;
+		WritableRaster ras = null;
 		ret.beginUpdate();
-		for(int z=0;z<source.getSizeT();z++)
-			for(int y=0;y<source.getHeight();y++){
-				for(int x=0;x<source.getWidth();x++){
-					ret.setData(x, y, 0, vesselness3D[z][x][y]);
-				}
+		for(int z=0;z<source.getSizeT();z++){
+			
+			img = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+			
+			ras = img.getRaster();
+				for(int y=0;y<source.getHeight();y++){
+					for(int x=0;x<source.getWidth();x++){
+				ras.setSample(x, y, 0, vesselness3D[z][x][y]);
+					}
+			}
+		
+			ret.addImage(img);
+			
+			
 			}
 		ret.endUpdate();
-	 }
+		}
 }
