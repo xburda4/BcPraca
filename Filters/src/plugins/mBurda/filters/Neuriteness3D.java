@@ -120,7 +120,7 @@ public class Neuriteness3D{
 	 * */
 	/*program sa zaobíde bez funkcie,dá sa prepísať aj na koniec computeVesselness2D funkcie
 	 * */
-public void makeImage(){
+public void makeImage3D(){
 		computeNeuriteness();
 		ret = new Sequence();
 		BufferedImage img = null;

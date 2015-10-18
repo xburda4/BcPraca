@@ -18,11 +18,16 @@ import icy.type.DataType;
 public class Filters extends PluginActionable {
 	@Override
 	public void run() {
-		System.out.println("Depth is " + getActiveSequence().getSizeT() );
+//		if(getActiveSequence() != null) 
+//		System.out.println("Depth is " + getActiveSequence().getSizeT() );
+//		
+//		Vesselness3D ves = new Vesselness3D(getActiveSequence(),3,0.5,30);
+//		ves.makeImage3D();
+//		addSequence(ves.ret);
 		
 		//rozmazanie obrazu s okolim 
-//		GaussianBlurFilter gauss = new GaussianBlurFilter(5);
-//		BufferedImage img = getGrayScale(gauss.filter(getActiveSequence().getImage(0, 0), null));
+		GaussianBlurFilter gauss = new GaussianBlurFilter(3);
+		BufferedImage image = getGrayScale(gauss.filter(getActiveSequence().getImage(0, 0), null));
 //
 //		Vesselness ves = new Vesselness(blurred,1.5,0.08);
 //		ves.makeImage2D();
@@ -42,16 +47,28 @@ public class Filters extends PluginActionable {
 //				image[y][x] = img.getRaster().getSampleDouble(x, y, 0);
 //			}
 //		}
-//		ComplexMatrix matrix = Computations.FourierTransform2D(image,false);
-//		double[] scs = {0.0015,0.02,0.05};
-//		double[] ors = {0,90,180,270};
-//		
-//		
-//		
-//		Vesselness ves = new Vesselness(img,1.5,0.08);
-//		ves.phaseCong = Computations.getPhaseCong(matrix, scs, ors, 2, 5, 4);
-//		
-//		addSequence(new Sequence("Final Phase Cong",makeImage2D(ves.phaseCong)));
+		
+		ComplexMatrix matrix = Computations.FourierTransform2D(image,false);
+		
+		
+		double[] scs = {0.0015,0.002,0.005,0.009,0.013};
+		double[] ors = {0,90,180,270};
+		
+		Vesselness2D ves = new Vesselness2D(image,5.5,0.007);
+		
+		Neuriteness2D neu = new Neuriteness2D(image,-5);
+		
+		ves.phaseCong = Computations.getPhaseCong(matrix, scs, ors, -2, -55 ,8);
+		neu.phaseCong = Computations.getPhaseCong(matrix, scs, ors, -2, -55 ,8);
+//		ves.phaseCong = Computations.getPhaseCong(matrix, scs, ors, -2, 0.4 ,10);
+		ves.makeImage2D();
+		addSequence(new Sequence("Vesselness",ves.ret));
+		ves.makeImageWithPhase2D();
+		addSequence(new Sequence("Vesselness with phase",ves.ret));
+		neu.makeImage2D();
+		addSequence(new Sequence("Neuriteness",neu.ret));
+		neu.makeImageWithPhase2D();
+		addSequence(new Sequence("Neuriteness with phase",neu.ret));
 //		addSequence(new Sequence("invFTT",makeImage2D(Computations.InverseFourierTransform2D(matrix, true))));
 //		
 //		addSequence(new Sequence("Magnitude",makeImage2D(Computations.fttToDoubleArr(matrix,true))));
@@ -61,7 +78,7 @@ public class Filters extends PluginActionable {
 //		addSequence(new Sequence("Final product - Vesselness",ves.ret));
 
 		
-		MessageDialog.showDialog("Filt is done !");
+//		MessageDialog.showDialog("Filt is done !");
 	}
 
 	public IcyBufferedImage makeImage2D(double[][] source){

@@ -3,6 +3,7 @@ package plugins.mBurda.filters;
 //import org.jdesktop.swingx.image.GaussianBlurFilter;
 
 import icy.gui.dialog.MessageDialog;
+import icy.sequence.Sequence;
 
 import java.awt.image.BufferedImage;
 
@@ -12,12 +13,12 @@ import flanagan.math.FourierTransform;
 
 public class Computations {
 
-	public static double[][] getGaborKernel(int width, int height,
+	public static double[][] getGaborKernel2D(int width, int height,
 			double wavelength, double angle) {
-		return getGaborKernel(width, height, wavelength, angle, 8.5, 0.75);
+		return getGaborKernel2D(width, height, wavelength, angle, 8.5, 0.75);
 	}
 
-	public static double[][] getGaborKernel(int width, int height,
+	public static double[][] getGaborKernel2D(int width, int height,
 			double wavelength, double angle, double sigmaOnf, double thetaSigma) {
 		angle = angle * Math.PI / 180;
 		double centerFreq = 1.0 / wavelength;
@@ -93,22 +94,30 @@ public class Computations {
 		}
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
-		
+		double temp0,temp1;
 		for (int orients = 0; orients < orientations.length; orients++) {
 			for (int scs = 0; scs < scales.length; scs++) {
 				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients]);
+				componentSO[orients][scs] = InverseFourierTransform2D(createComplexMatrix(componentSO[orients][scs]), false);
+				for(int y=0;y<componentSO[orients][scs][0].length;y++){
+					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
+						temp0 = componentSO[orients][scs][0][y][x];
+						temp1 = componentSO[orients][scs][1][y][x];
+						componentSO[orients][scs][0][y][x] = Math.sqrt(temp0*temp0+temp1*temp1);
+						componentSO[orients][scs][1][y][x] = Math.atan2(temp1, temp0);
+						}
+					}
 			}
 		}
 		
-		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase;
+		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase,tmp;
 		double[][] phaseCongMatrix = new double[ftImg.getNrow()][ftImg.getNcol()];
 		for (int y = 0; y < ftImg.getNrow(); y++) {
 			for (int x = 0; x < ftImg.getNcol(); x++) {
-				phaseCongMatrix[y][x] = 0;
+				phaseCongMatrix[y][x] = 0;tmp = 0;
 				for (int orients = 0; orients < orientations.length; orients++) {
 					
-					sumOfAmplis = 0; meanPhase = 0; numerator = 0; denominator = 0;
-					
+					sumOfAmplis = 0; meanPhase = 0; numerator = 0; 					
 					for (int scs = 0; scs < scales.length; scs++) {
 						sumOfAmplis+=componentSO[orients][scs][0][y][x];
 						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
@@ -116,31 +125,89 @@ public class Computations {
 						meanPhase += componentSO[orients][scs][1][y][x];
 					}
 					meanPhase /= scales.length;
-					
+					denominator = sumOfAmplis;
+
 					for (int scs = 0; scs < scales.length; scs++) {
-						if(componentSO[orients][scs][0][y][x] == 0){
-							numerator = 0;
-							continue;
-						}
 						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
 								Math.abs(Math.sin(componentSO[orients][scs][1][y][x])-meanPhase);
-						numerator = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
-						if(numerator < 0){
-							numerator = 0;
+						tmp = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
+						if(tmp < 0){
+							tmp = 0;
 							continue;
 						}
 						
 						weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001))));
-						numerator *= weight;
+						tmp *= weight;
+						numerator += tmp;
 					}
-					denominator += 0.000000000001;
+					denominator += 0.0000000000000000001;
 					phaseCongMatrix[y][x] += (numerator/denominator);
 				}
 			}
 		}
 		return phaseCongMatrix;
 	}
-
+	
+	
+	
+	
+	
+//	public static double[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
+//			double[] orientations, double threshold, double cutoffValue,
+//			double gainFactor) {
+//		if(ftImg == null || scales == null || orientations == null) {
+//			MessageDialog.showDialog("Incorrect argument");
+//			return null;
+//		}
+//		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
+//				.getNrow()][ftImg.getNcol()];
+//		
+//		for (int orients = 0; orients < orientations.length; orients++) {
+//			for (int scs = 0; scs < scales.length; scs++) {
+//				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients]);
+//			}
+//		}
+//		
+//		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase;
+//		double[][] phaseCongMatrix = new double[ftImg.getNrow()][ftImg.getNcol()];
+//		for (int y = 0; y < ftImg.getNrow(); y++) {
+//			for (int x = 0; x < ftImg.getNcol(); x++) {
+//				phaseCongMatrix[y][x] = 0;
+//				for (int orients = 0; orients < orientations.length; orients++) {
+//					
+//					sumOfAmplis = 0; meanPhase = 0; numerator = 0; denominator = 0;
+//					
+//					for (int scs = 0; scs < scales.length; scs++) {
+//						sumOfAmplis+=componentSO[orients][scs][0][y][x];
+//						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
+//						else Amax = Math.max(Amax,componentSO[orients][scs][0][y][x]);
+//						meanPhase += componentSO[orients][scs][1][y][x];
+//					}
+//					meanPhase /= scales.length;
+//					
+//					for (int scs = 0; scs < scales.length; scs++) {
+//						if(componentSO[orients][scs][0][y][x] == 0){
+//							numerator = 0;
+//							continue;
+//						}
+//						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
+//								Math.abs(Math.sin(componentSO[orients][scs][1][y][x])-meanPhase);
+//						numerator = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
+//						if(numerator < 0){
+//							numerator = 0;
+//							continue;
+//						}
+//						
+//						weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001))));
+//						numerator *= weight;
+//					}
+//					denominator += 0.000000000001;
+//					phaseCongMatrix[y][x] += (numerator/denominator);
+//				}
+//			}
+//		}
+//		return phaseCongMatrix;
+//	}
 
 	public static ComplexMatrix FourierTransform2D(BufferedImage img,
 			boolean isAlt) {
@@ -215,7 +282,7 @@ public class Computations {
 		return output;
 	}
 
-	public static double[][] fttToDoubleArr(ComplexMatrix input,boolean isAlt){
+	public static double[][] fttToDoubleArr2D(ComplexMatrix input,boolean isAlt){
 		if (input == null)
 			return null;
 		double[][] output = new double[input.getNrow()][input.getNcol()];
@@ -229,7 +296,7 @@ public class Computations {
 		return output;
 	}
 	
-	public static double[][] InverseFourierTransform2D(ComplexMatrix input,boolean isAlt) {
+	public static double[][][] InverseFourierTransform2D(ComplexMatrix input,boolean isAlt) {
 		if (input == null)
 			return null;
 		
@@ -237,12 +304,12 @@ public class Computations {
 		 * Fourierova transformácia nad každým riadkom a následne priradenie
 		 * hodnôt do matice output
 		 */
-		double[][] output = new double[input.getNrow()][input.getNcol()];
+		double[][][] output = new double[2][input.getNrow()][input.getNcol()];
 		
 		if(isAlt){
 			for (int y = 0; y < input.getNrow(); y++) {
 				for (int x = 0; x < input.getNcol(); x++) {
-					output[(y+input.getNrow()/2)%input.getNrow()][(x+input.getNcol()/2)%input.getNcol()] = input.getElementCopy(y, x).getReal()*Math.exp(input.getElementCopy(y, x).getImag());
+					output[0][(y+input.getNrow()/2)%input.getNrow()][(x+input.getNcol()/2)%input.getNcol()] = input.getElementCopy(y, x).getReal()*Math.exp(input.getElementCopy(y, x).getImag());
 				}	
 			}
 		}
@@ -282,9 +349,35 @@ public class Computations {
 
 		for (int y = 0; y < input.getNrow(); y++) {
 			for (int x = 0; x < input.getNcol(); x++) {
-				output[y][x] = input.getElementCopy(y, x).getReal();
+				output[0][y][x] = input.getElementCopy(y, x).getReal();
+				output[1][y][x] = input.getElementCopy(y, x).getImag();
 			}
 		}
 		return output;
 	}
+
+	
+	public static ComplexMatrix createComplexMatrix(double[][][] input){
+		ComplexMatrix output = new ComplexMatrix(input[0].length,input[0][0].length);
+		for(int y=0;y<input[0].length;y++){
+			for(int x=0;x<input[0][y].length;x++){
+				output.setElement(y, x, input[0][y][x], input[1][y][x]);
+			}
+		}
+		return output;
+	}
+	
+	//metódy pre 3D
+	
+	public static ComplexMatrix[] FourierTransform3D(Sequence seq,boolean isAlt){
+		
+		
+		return null;
+	}
+	
+	
+	
+	
+	
+	
 }

@@ -26,8 +26,9 @@ public class Vesselness2D{
 	}
 	public Vesselness2D(BufferedImage source){
 		this.source = source;
+		beta = 1.5;
+		brightThresh = 0.08;
 	}
-	
 	
 	/**Computes vesselness for 2D grayscale images. Saves it to a matrix vesselness2D
 	 * */
@@ -128,7 +129,7 @@ public class Vesselness2D{
 	 * */
 	/*program sa zaobíde bez funkcie,dá sa prepísať aj na koniec computeVesselness2D funkcie
 	 * */
-public void makeImage2D(){
+public void makeImageWithPhase2D(){
 		computeVesselnessWithPhase();
 		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 		ret.beginUpdate();
@@ -139,4 +140,16 @@ public void makeImage2D(){
 		}
 		ret.endUpdate();
 	 }
+
+public void makeImage2D(){
+	computeVesselness();
+	ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+	ret.beginUpdate();
+	for(int y=0;y<source.getHeight();y++){
+		for(int x=0;x<source.getWidth();x++){
+			ret.setData(x, y, 0, vesselness2D[x][y]);
+		}
+	}
+	ret.endUpdate();
+ }
 }
