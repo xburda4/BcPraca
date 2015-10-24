@@ -1,13 +1,13 @@
 package plugins.mBurda.filters;
 
 
-import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 
 import Jama.Matrix;
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
+import icy.sequence.SequenceUtil;
 import icy.type.DataType;
 
 
@@ -15,21 +15,22 @@ public class Neuriteness3D{
 	private Sequence source;
 	public Sequence ret;
 	public double[][][] neuriteness3D;
-	public double beta,brightThresh,gamma;
+	public double alpha,gamma;
 	public double[][][] phaseCong;
 	
 	/**@param source blurred grayscale image with one channel
 	 * @param beta,bright,gamma thresholds controling sensitivity of line measurement
 	 * */
-	public Neuriteness3D(Sequence source,double beta,double bright,double gamma){
-		this.source = source;
-		this.beta = beta;
-		this.brightThresh = bright;
+	public Neuriteness3D(Sequence source,double alpha,double gamma){
+		this.source = SequenceUtil.getCopy(source);
+		this.alpha = alpha;
 		this.gamma = gamma;
 	}
 	
 	public Neuriteness3D(Sequence source){
-		this.source = source;
+		this.source = SequenceUtil.getCopy(source);
+		gamma = 0.33;
+		alpha = 0;
 	}
 	
 	
@@ -40,11 +41,16 @@ public class Neuriteness3D{
 		
 		
 		WritableRaster raster;
+		WritableRaster rasMinus=null,rasPlus=null;
 		this.neuriteness3D = new double[source.getSizeT()][source.getWidth()][source.getHeight()];
 		
 		double minEig=0;
 		for(int z=0;z<source.getSizeT();z++){
 			raster = source.getImage(z, 0).getRaster();
+			if(z+1<source.getSizeT() && z-1>=0){
+				rasMinus = source.getImage(z-1, 0).getRaster();
+				rasPlus = source.getImage(z+1, 0).getRaster();
+			}
 			for(int y=0;y<source.getHeight();y++){
 				for(int x=0;x<source.getWidth();x++){
 					if(x+1<source.getWidth() && x-1>=0){
@@ -67,7 +73,7 @@ public class Neuriteness3D{
 					hessian.set(1, 0, hessian.get(0,1));
 					
 					if(z+1<source.getSizeT() && z-1>=0 && y+1 < source.getHeight() && y-1>=0){
-						double a = (source.getImage(z+1, 0).getRaster().getSample(x, y+1, 0)+source.getImage(z-1, 0).getRaster().getSample(x, y-1, 0)-source.getImage(z+1, 0).getRaster().getSample(x, y-1, 0)-source.getImage(z-1, 0).getRaster().getSample(x, y+1, 0))/4;
+						double a = (rasPlus.getSample(x, y+1, 0)+rasMinus.getSample(x, y-1, 0)-rasPlus.getSample(x, y-1, 0)-rasMinus.getSample(x, y+1, 0))/4;
 						hessian.set(1,2,a);
 						
 					}else hessian.set(1, 2, 0);
@@ -75,12 +81,12 @@ public class Neuriteness3D{
 					
 					if(z+1<source.getSizeT() && z-1>=0){
 						
-						double a = (source.getImage(z+1, 0).getRaster().getSample(x, y, 0)+source.getImage(z-1, 0).getRaster().getSample(x, y, 0)-2*raster.getSample(x, y, 0));
+						double a = (rasPlus.getSample(x, y, 0)+rasMinus.getSample(x, y, 0)-2*raster.getSample(x, y, 0));
 						hessian.set(2, 2, a); 	
 					} else hessian.set(2, 2, 0);
 					
 					if(z+1<source.getSizeT() && z-1>=0 && x+1 < source.getWidth() && x-1>=0){
-						double a = (source.getImage(z+1, 0).getRaster().getSample(x+1, y, 0)+source.getImage(z-1, 0).getRaster().getSample(x-1, y, 0)-source.getImage(z+1, 0).getRaster().getSample(x-1, y, 0)-source.getImage(z-1, 0).getRaster().getSample(x+1, y, 0))/4;
+						double a = (rasPlus.getSample(x+1, y, 0)+rasMinus.getSample(x-1, y, 0)-rasPlus.getSample(x-1, y, 0)-rasMinus.getSample(x+1, y, 0))/4;
 						hessian.set(0,2,a);
 						
 					}else hessian.set(0, 2, 0);
@@ -116,31 +122,30 @@ public class Neuriteness3D{
 	}
 
 	
-	/** Rewrites data from vesselness2D matrix to image ret.
+	/** Rewrites data from neuriteness3D matrix to image ret.
 	 * */
-	/*program sa zaobíde bez funkcie,dá sa prepísať aj na koniec computeVesselness2D funkcie
+	/*program sa zaobíde bez funkcie,dá sa prepísať aj na koniec predošlej funkcie
 	 * */
 public void makeImage3D(){
 		computeNeuriteness();
-		ret = new Sequence();
-		BufferedImage img = null;
+		ret = new Sequence("Neuriteness3D");
+		IcyBufferedImage img = null;
 		WritableRaster ras = null;
 		ret.beginUpdate();
 		for(int z=0;z<source.getSizeT();z++){
-			
 			img = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
-			
+			img.beginUpdate();
 			ras = img.getRaster();
 				for(int y=0;y<source.getHeight();y++){
 					for(int x=0;x<source.getWidth();x++){
 				ras.setSample(x, y, 0, neuriteness3D[z][x][y]);
 					}
 			}
-		
 			ret.addImage(img);
 			
 			
 			}
+		img.endUpdate();
 		ret.endUpdate();
-		}
+	}
 }

@@ -12,7 +12,7 @@ public class Neuriteness2D{
 	public IcyBufferedImage ret;
 	private double[][] neuriteness2D;
 	private double alpha;
-	public double[][] phaseCong;
+	public double[][] phaseCong; //prepísať na static + triedu z ktorej budú vesselness a neuriteness dediť
 	/**@param src grayscale blurred image with one channel
 	 * @param alpha float
 	 * */

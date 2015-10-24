@@ -1,15 +1,15 @@
 package plugins.mBurda.filters;
 
-//import org.jdesktop.swingx.image.GaussianBlurFilter;
-
-import icy.gui.dialog.MessageDialog;
-import icy.sequence.Sequence;
-
 import java.awt.image.BufferedImage;
 
 import flanagan.complex.Complex;
 import flanagan.complex.ComplexMatrix;
 import flanagan.math.FourierTransform;
+
+//import org.jdesktop.swingx.image.GaussianBlurFilter;
+
+import icy.gui.dialog.MessageDialog;
+import icy.sequence.Sequence;
 
 public class Computations {
 

@@ -14,7 +14,7 @@ public class Vesselness2D{
 	public IcyBufferedImage ret;
 	public double[][] vesselness2D;
 	public double beta,brightThresh;
-	public double[][] phaseCong;
+	public double[][] phaseCong; //prepísať na static + triedu z ktorej budú vesselness a neuriteness dediť
 	
 	/**@param source blurred grayscale image with one channel
 	 * @param beta,bright thresholds controling sensitivity of line measurement

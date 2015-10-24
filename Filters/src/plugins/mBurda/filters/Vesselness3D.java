@@ -2,10 +2,12 @@ package plugins.mBurda.filters;
 
 
 import java.awt.image.WritableRaster;
+
 import Jama.Matrix;
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
+import icy.sequence.SequenceUtil;
 import icy.type.DataType;
 
 
@@ -20,14 +22,14 @@ public class Vesselness3D{
 	 * @param beta,bright,gamma thresholds controling sensitivity of line measurement
 	 * */
 	public Vesselness3D(Sequence source,double beta,double bright,double gamma){
-		this.source = source;
+		this.source = SequenceUtil.getCopy(source);
 		this.beta = beta;
 		this.brightThresh = bright;
 		this.gamma = gamma;
 	}
 	
 	public Vesselness3D(Sequence source){
-		this.source = source;
+		this.source = SequenceUtil.getCopy(source);
 	}
 	
 	
@@ -119,7 +121,6 @@ public void makeImage3D(){
 		WritableRaster ras = null;
 		ret.beginUpdate();
 		for(int z=0;z<source.getSizeT();z++){
-			System.out.println("Iteration " + z);
 			img = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 			img.beginUpdate();
 			ras = img.getRaster();
@@ -128,7 +129,6 @@ public void makeImage3D(){
 				ras.setSample(x, y, 0, vesselness3D[z][x][y]);
 					}
 			}
-			
 			ret.addImage(img);
 			
 			
