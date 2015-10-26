@@ -5,6 +5,9 @@ import plugins.adufour.ezplug.*;
 
 public class CurvilinearStructures extends EzPlug {
 
+	Vesselness2D ves = null;
+	Neuriteness2D neu = null;
+	
 	EzVarInteger blur = new EzVarInteger("Radius of blur",1,0,10,1);
 	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",false);
 	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",false);
@@ -41,6 +44,22 @@ public class CurvilinearStructures extends EzPlug {
 	protected void execute() {
 		if(vesselness.isEnabled()) System.out.println("This is checked");
 		MessageDialog.showDialog("phaseCong is working fine !");
+		if(vesselness.isEnabled()){
+			ves = new Vesselness2D(getActiveImage(), betaThreshold.getValue(), gammaThreshold.getValue());
+			ves.makeImage2D();
+		}
+		if(vesPhase.isEnabled()){
+			if(ves == null) ves = new Vesselness2D(getActiveImage(), betaThreshold.getValue(), gammaThreshold.getValue());
+			ves.makeImageWithPhase2D();
+		}
+		if(neuriteness.isEnabled()){
+			neu = new Neuriteness2D(getActiveImage(), alphaSteer.getValue());
+			neu.makeImage2D();
+		}
+		if(neuPhase.isEnabled()){
+			if(neu == null) neu = new Neuriteness2D(getActiveImage(), alphaSteer.getValue());
+			neu.makeImageWithPhase2D();
+		}
 	}
 
 //	private Sequence[] getOpenedSequences(){
