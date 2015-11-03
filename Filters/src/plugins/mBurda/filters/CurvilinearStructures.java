@@ -1,6 +1,11 @@
 package plugins.mBurda.filters;
 
-import icy.gui.dialog.MessageDialog;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
+import org.jdesktop.swingx.image.GaussianBlurFilter;
+
+import icy.sequence.Sequence;
 import plugins.adufour.ezplug.*;
 
 public class CurvilinearStructures extends EzPlug {
@@ -8,66 +13,87 @@ public class CurvilinearStructures extends EzPlug {
 	Vesselness2D ves = null;
 	Neuriteness2D neu = null;
 	
+	
 	EzVarInteger blur = new EzVarInteger("Radius of blur",1,0,10,1);
 	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",false);
 	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",false);
-	EzVarDouble betaThreshold =new EzVarDouble("Disparsity control",0,-50,50,1);
-	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-50,50,1);
-	EzVarDouble alphaSteer = new EzVarDouble("Steerable filter equivalent",0,-50,50,1);
-	EzVarDouble cutoffValue = new EzVarDouble("Cutoff value",0,-50,50,1);
-	EzVarDouble threshold = new EzVarDouble("Threshold",0,-50,50,0.5);
-	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,1);
+	EzVarDouble betaThreshold =new EzVarDouble("Disparsity control",0,-50,50,0.05);
+	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-2,2,0.02);
+	EzVarDouble alphaSteer = new EzVarDouble("Steerable filter equivalent",0,-50,50,0.05);
+	EzVarDouble cutoffValue = new EzVarDouble("Cutoff value",0,-100,100,1);
+	EzVarDouble threshold = new EzVarDouble("Threshold",0,-50,50,0.05);
+	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,0.05);
 	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",false);
 	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",false);
 //	EzVarEnum<Sequence> source = new EzVarEnum<Sequence>("Choose Input image",getOpenedSequences());
-			
+	EzVarInteger angleOrigin = new EzVarInteger("Origin of angle computation",0,-360,360,1);
+	EzVarInteger angleStep = new EzVarInteger("Step of angle selection",0,-360,360,1);
+	
 	EzGroup vesGroup = new EzGroup("Vesselness",betaThreshold,gammaThreshold);
 	EzGroup neuGroup = new EzGroup("Neuriteness",alphaSteer);
-	EzGroup phaseCongGroup = new EzGroup("Phase congruency parameters",cutoffValue,threshold,gainFactor);
+	EzGroup phaseCongGroup = new EzGroup("Phase congruency parameters",threshold,cutoffValue,gainFactor);
 	EzGroup outputGroup = new EzGroup("Show output",vesselness,vesPhase,neuriteness,neuPhase);
+	EzGroup angleGroup = new EzGroup("Angle parametrization",angleOrigin,angleStep);
+	
 	@Override
 	protected void initialize() {
-		
 		addEzComponent(blur);
 		addEzComponent(outputGroup);
 		addEzComponent(vesGroup);
 		addEzComponent(neuGroup);
 		addEzComponent(phaseCongGroup);
-		
-//		vesPhase.addVisibilityTriggerTo(vesGroup, true);
-//		vesselness.addVisibilityTriggerTo(vesGroup, true);
-//		neuriteness.addVisibilityTriggerTo(neuGroup, true);
-//		neuPhase.addVisibilityTriggerTo(neuGroup, true);
+		addEzComponent(angleGroup);
 	}
 
 	@Override
 	protected void execute() {
-		if(vesselness.isEnabled()) System.out.println("This is checked");
-		MessageDialog.showDialog("phaseCong is working fine !");
-		if(vesselness.isEnabled()){
-			ves = new Vesselness2D(getActiveImage(), betaThreshold.getValue(), gammaThreshold.getValue());
-			ves.makeImage2D();
+		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
+		BufferedImage img = getGrayScale(gauss.filter(getActiveImage(), null));
+		double[] scs = {0.0015,0.002,0.005,0.009,0.013};
+		
+		double[] ors;
+		ors = new double[360/Math.abs(angleStep.getValue())];
+		for(int i=0;i<ors.length;i++){
+			ors[i] = (angleOrigin.getValue() + angleStep.getValue()*i) % 360;
 		}
-		if(vesPhase.isEnabled()){
-			if(ves == null) ves = new Vesselness2D(getActiveImage(), betaThreshold.getValue(), gammaThreshold.getValue());
-			ves.makeImageWithPhase2D();
+		
+		if(!(vesselness.getValue() || vesPhase.getValue() || neuriteness.getValue() || neuPhase.getValue())){
+			return;
+			}
+		if(vesselness.getValue()){
+			ves = new Vesselness2D(img, betaThreshold.getValue(), (gammaThreshold.getValue()));
+			addSequence(new Sequence("Vesselness",ves.makeImage2D()));
 		}
-		if(neuriteness.isEnabled()){
-			neu = new Neuriteness2D(getActiveImage(), alphaSteer.getValue());
-			neu.makeImage2D();
+		if(vesPhase.getValue()){
+			if(ves == null) ves = new Vesselness2D(img, betaThreshold.getValue(), gammaThreshold.getValue());
+			Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source, false), 
+					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
+			addSequence(new Sequence("Vesslness with phase congurency",ves.makeImageWithPhase2D()));
 		}
-		if(neuPhase.isEnabled()){
-			if(neu == null) neu = new Neuriteness2D(getActiveImage(), alphaSteer.getValue());
-			neu.makeImageWithPhase2D();
+		if(neuriteness.getValue()){
+			neu = new Neuriteness2D(img, alphaSteer.getValue());
+			addSequence(new Sequence("Neuriteness",neu.makeImage2D()));
 		}
+		if(neuPhase.getValue()){
+			if(neu == null) neu = new Neuriteness2D(img, alphaSteer.getValue());
+			if(!vesPhase.getValue()) Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source, false), 
+					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
+			addSequence(new Sequence("Neuriteness",neu.makeImageWithPhase2D()));
+		}
+		
 	}
-
-//	private Sequence[] getOpenedSequences(){
-//		
-//	}
 	
 	@Override
 	public void clean() {
 		// TODO Auto-generated by Icy4Eclipse
+	}
+	
+	private BufferedImage getGrayScale(BufferedImage original){
+		BufferedImage image = new BufferedImage(original.getWidth(), original.getHeight(),
+				BufferedImage.TYPE_BYTE_GRAY);  
+		Graphics g = image.getGraphics();
+		g.drawImage(original, 0, 0, null);
+		g.dispose(); 
+		return image;
 	}
 }
