@@ -5,7 +5,10 @@ import java.awt.image.BufferedImage;
 
 import org.jdesktop.swingx.image.GaussianBlurFilter;
 
+import icy.image.IcyBufferedImage;
+import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
+import icy.type.DataType;
 import plugins.adufour.ezplug.*;
 
 public class CurvilinearStructures extends EzPlug {
@@ -25,15 +28,13 @@ public class CurvilinearStructures extends EzPlug {
 	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,0.05);
 	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",false);
 	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",false);
-//	EzVarEnum<Sequence> source = new EzVarEnum<Sequence>("Choose Input image",getOpenedSequences());
-	EzVarInteger angleOrigin = new EzVarInteger("Origin of angle computation",0,-360,360,1);
-	EzVarInteger angleStep = new EzVarInteger("Step of angle selection",0,-360,360,1);
+	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",4,4,16,1);
 	
 	EzGroup vesGroup = new EzGroup("Vesselness",betaThreshold,gammaThreshold);
 	EzGroup neuGroup = new EzGroup("Neuriteness",alphaSteer);
 	EzGroup phaseCongGroup = new EzGroup("Phase congruency parameters",threshold,cutoffValue,gainFactor);
 	EzGroup outputGroup = new EzGroup("Show output",vesselness,vesPhase,neuriteness,neuPhase);
-	EzGroup angleGroup = new EzGroup("Angle parametrization",angleOrigin,angleStep);
+	EzGroup angleGroup = new EzGroup("Angle parametrization",angleKernels);
 	
 	@Override
 	protected void initialize() {
@@ -51,10 +52,16 @@ public class CurvilinearStructures extends EzPlug {
 		BufferedImage img = getGrayScale(gauss.filter(getActiveImage(), null));
 		double[] scs = {0.0015,0.002,0.005,0.009,0.013};
 		
-		double[] ors;
-		ors = new double[360/Math.abs(angleStep.getValue())];
+		double[] ors = {angleKernels.getValue()};
+		{
+			int tmp = 4;
+			for(int i=4;i<angleKernels.getValue();i*=2){
+				tmp=i;
+				}
+			ors = new double[tmp];
+		}
 		for(int i=0;i<ors.length;i++){
-			ors[i] = (angleOrigin.getValue() + angleStep.getValue()*i) % 360;
+			ors[i] = i*(360/ors.length);
 		}
 		
 		if(!(vesselness.getValue() || vesPhase.getValue() || neuriteness.getValue() || neuPhase.getValue())){
@@ -80,7 +87,19 @@ public class CurvilinearStructures extends EzPlug {
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
 			addSequence(new Sequence("Neuriteness",neu.makeImageWithPhase2D()));
 		}
-		
+		//addSequence(new Sequence("Phase congruency",getImage()));
+	}
+	
+	private IcyBufferedImage getImage(){
+		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
+		ret.beginUpdate();
+		for(int y=0;y<Filter.phaseCong.length;y++){
+			for(int x=0;x<Filter.phaseCong[y].length;x++){
+				ret.setDataAsDouble(x, y, 0, Filter.phaseCong[y][x]);
+			}
+		}
+		ret.endUpdate();
+		return ret;
 	}
 	
 	@Override

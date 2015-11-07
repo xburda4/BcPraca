@@ -5,11 +5,8 @@ import java.awt.image.BufferedImage;
 import flanagan.complex.Complex;
 import flanagan.complex.ComplexMatrix;
 import flanagan.math.FourierTransform;
-
-//import org.jdesktop.swingx.image.GaussianBlurFilter;
-
 import icy.gui.dialog.MessageDialog;
-import icy.sequence.Sequence;
+import icy.image.IcyBufferedImage;
 
 public class Computations {
 
@@ -19,7 +16,7 @@ public class Computations {
 	}
 
 	public static double[][] getGaborKernel2D(int width, int height,
-			double wavelength, double angle, double sigmaOnf, double thetaSigma) {
+		double wavelength, double angle, double sigmaOnf, double thetaSigma) {
 		angle = angle * Math.PI / 180;
 		double centerFreq = 1.0 / wavelength;
 		double radialComp;
@@ -209,8 +206,19 @@ public class Computations {
 //		return phaseCongMatrix;
 //	}
 
+	public static ComplexMatrix FourierTransform2D(IcyBufferedImage img,
+			boolean isAlt){
+		double[][] matrix = new double[img.getHeight()][img.getWidth()];
+		for (int y = 0; y < img.getHeight(); y++) {
+			for (int x = 0; x < img.getWidth(); x++) {
+				matrix[y][x] = img.getRaster().getSample(x, y, 0);
+			}
+		}
+		return FourierTransform2D(matrix, isAlt);
+	}
+	
 	public static ComplexMatrix FourierTransform2D(BufferedImage img,
-			boolean isAlt) {
+			boolean isAlt){
 		double[][] matrix = new double[img.getHeight()][img.getWidth()];
 		for (int y = 0; y < img.getHeight(); y++) {
 			for (int x = 0; x < img.getWidth(); x++) {
@@ -366,18 +374,4 @@ public class Computations {
 		}
 		return output;
 	}
-	
-	//metódy pre 3D
-	
-	public static ComplexMatrix[] FourierTransform3D(Sequence seq,boolean isAlt){
-		
-		
-		return null;
-	}
-	
-	
-	
-	
-	
-	
 }

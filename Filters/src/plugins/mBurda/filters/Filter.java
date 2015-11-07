@@ -7,7 +7,8 @@ import icy.image.IcyBufferedImage;
 
 public abstract class Filter {
 	protected static IcyBufferedImage source;
-	private static double[][] phaseCong;
+	protected static double[][] phaseCong;
+	
 	
 	public static double[] getEigenValues(int x,int y){
 		Matrix hessian = new Matrix(2,2);
@@ -16,7 +17,7 @@ public abstract class Filter {
 		if(x+1<source.getWidth() && x-1>=0)
 		{
 			//Horizontal approximation
-			double a = (raster.getSample(x+1, y, 0)+raster.getSample(x-1, y, 0)*-2*raster.getSample(x, y, 0));
+			double a = (raster.getSample(x+1, y, 0)+raster.getSample(x-1, y, 0)-2*raster.getSample(x, y, 0));
 			hessian.set(0, 0, a); 	
 		} else hessian.set(0, 0, 0);
 		if(y+1 < source.getHeight() && y-1>=0)
@@ -33,13 +34,20 @@ public abstract class Filter {
 		} else hessian.set(0, 1, 0);
 		hessian.set(1, 0, hessian.get(0,1));
 		
-		
-		double[] ret = new double[2];
-		ret[0] = Math.max(Math.abs(hessian.eig().getRealEigenvalues()[0]), Math.abs(hessian.eig().getRealEigenvalues()[1]));
-		ret[1] = Math.min(Math.abs(hessian.eig().getRealEigenvalues()[0]), Math.abs(hessian.eig().getRealEigenvalues()[1]));
-		
-		return ret;
+		double[] eig = hessian.eig().getRealEigenvalues();
+		double tmp = 0;
+		if(Math.abs(eig[0]) > Math.abs(eig[1])){
+			tmp = eig[1];
+			eig[1] = eig[0];
+			eig[0] = tmp;
+		}
+		return eig;
 	}
+	
+//	public double[] getEigenValuesWithPhase(int x,int y){
+//		Matrix mat = new Matrix(2,2);
+//		
+//	}
 	
 	public double[] getEigenValuesWithPhase(int x,int y){
 		Matrix hessian = new Matrix(2,2);
@@ -65,11 +73,13 @@ public abstract class Filter {
 		} else hessian.set(0, 1, 0);
 		hessian.set(1, 0, hessian.get(0,1));
 		
-		
-		double[] ret = new double[2];
-		ret[0] = Math.max(Math.abs(hessian.eig().getRealEigenvalues()[0]), Math.abs(hessian.eig().getRealEigenvalues()[1]));
-		ret[1] = Math.min(Math.abs(hessian.eig().getRealEigenvalues()[0]), Math.abs(hessian.eig().getRealEigenvalues()[1]));
-		
-		return ret;
+		double[] eig = hessian.eig().getRealEigenvalues();
+		double tmp = 0;
+		if(Math.abs(eig[0]) > Math.abs(eig[1])){
+			tmp = eig[1];
+			eig[1] = eig[0];
+			eig[0] = tmp;
+		}
+		return eig;
 	}
 }

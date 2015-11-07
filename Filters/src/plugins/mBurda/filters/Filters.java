@@ -1,9 +1,5 @@
 package plugins.mBurda.filters;
 
-
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
 import icy.plugin.abstract_.PluginActionable;
@@ -85,15 +81,6 @@ public class Filters extends PluginActionable {
 		
 		return ret;
 	 }
-	
-	private BufferedImage getGrayScale(BufferedImage original){
-		BufferedImage image = new BufferedImage(original.getWidth(), original.getHeight(),
-				BufferedImage.TYPE_BYTE_GRAY);  
-		Graphics g = image.getGraphics();
-		g.drawImage(original, 0, 0, null);
-		g.dispose(); 
-		return image;
-	}
 }
 
 

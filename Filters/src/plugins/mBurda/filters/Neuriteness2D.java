@@ -6,7 +6,6 @@ import icy.image.colormodel.IcyColorModel;
 import icy.type.DataType;
 
 public class Neuriteness2D extends Filter{
-	public IcyBufferedImage ret;
 	private double[][] neuriteness2D;
 	private double alpha;
 	
@@ -82,9 +81,9 @@ public class Neuriteness2D extends Filter{
 	
 	/** Rewrites data from neuriteness2D matrix to image ret.
 	 * */
-	public void makeImage2D(){
+	public IcyBufferedImage makeImage2D(){
 		computeNeuriteness2D();
-		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+		IcyBufferedImage ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 		ret.beginUpdate();
 		for(int y=0;y<source.getHeight();y++){
 			for(int x=0;x<source.getWidth();x++){
@@ -92,11 +91,12 @@ public class Neuriteness2D extends Filter{
 			}
 		}
 		ret.endUpdate();
+		return ret;
 	 }
 	
-	public void makeImageWithPhase2D(){
+	public IcyBufferedImage makeImageWithPhase2D(){
 		computeNeuritenessWithPhase2D();
-		ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
+		IcyBufferedImage ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 		ret.beginUpdate();
 		for(int y=0;y<source.getHeight();y++){
 			for(int x=0;x<source.getWidth();x++){
@@ -104,6 +104,7 @@ public class Neuriteness2D extends Filter{
 			}
 		}
 		ret.endUpdate();
-	 }
+		return ret;
+	}
 	
 }
