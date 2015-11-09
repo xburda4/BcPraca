@@ -2,6 +2,7 @@ package plugins.mBurda.filters;
 
 import java.awt.image.BufferedImage;
 
+import Jama.Matrix;
 import flanagan.complex.Complex;
 import flanagan.complex.ComplexMatrix;
 import flanagan.math.FourierTransform;
@@ -58,7 +59,7 @@ public class Computations {
 						.log(8.5) * Math.log(8.5))))));
 
 		double theta = Math.atan2(-y, x);
-		orientation = orientation * Math.PI / 180;
+		//orientation = orientation;
 		double ds = Math.sin(theta) * Math.cos(orientation) - Math.cos(theta)
 				* Math.sin(orientation);
 		double dc = Math.cos(theta) * Math.cos(orientation) + Math.sin(theta)
@@ -76,19 +77,20 @@ public class Computations {
 				logGabPoint = getLogGaborKernelPoint(x - ftImg.getNcol()/2,y - ftImg.getNrow()/2, scale, angle);
 				//možné použitie fcie getLogGaborKernel() pred cyklom
 				output[0][y][x] = logGabPoint * ftImg.getElementCopy(y, x).getReal();
-				output[1][y][x] = logGabPoint * ftImg.getElementCopy(y, x).getImag();
+				output[1][y][x] = /*logGabPoint * */ ftImg.getElementCopy(y, x).getImag();
 			}
 		}
 		return output;
 	}
 	
-	public static double[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
+	public static Matrix[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
 			double[] orientations, double threshold, double cutoffValue,
 			double gainFactor) {
 		if(ftImg == null || scales == null || orientations == null) {
 			MessageDialog.showDialog("Incorrect argument");
 			return null;
 		}
+
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
 		double temp0,temp1;
@@ -108,10 +110,11 @@ public class Computations {
 		}
 		
 		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase,tmp;
-		double[][] phaseCongMatrix = new double[ftImg.getNrow()][ftImg.getNcol()];
+		Matrix[][] phaseCongMatrix = new Matrix[ftImg.getNrow()][ftImg.getNcol()];
 		for (int y = 0; y < ftImg.getNrow(); y++) {
 			for (int x = 0; x < ftImg.getNcol(); x++) {
-				phaseCongMatrix[y][x] = 0;tmp = 0;
+				//phaseCongMatrix[y][x] = new Matrix(2,2);
+				tmp = 0;
 				for (int orients = 0; orients < orientations.length; orients++) {
 					
 					sumOfAmplis = 0; meanPhase = 0; numerator = 0; 					
@@ -128,17 +131,22 @@ public class Computations {
 						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
 								Math.abs(Math.sin(componentSO[orients][scs][1][y][x])-meanPhase);
 						tmp = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
-						if(tmp < 0){
-							tmp = 0;
-							continue;
-						}
 						
 						weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001))));
 						tmp *= weight;
 						numerator += tmp;
 					}
 					denominator += 0.0000000000000000001;
-					phaseCongMatrix[y][x] += (numerator/denominator);
+					
+					Matrix mat = new Matrix(2,2);
+					mat.set(0, 0, (Math.cos(orients)*Math.cos(orients)+1/2));
+					mat.set(0, 1, Math.cos(orients)*Math.sin(orients));
+					mat.set(1, 0, mat.get(0, 1));
+					mat.set(1, 1, (Math.sin(orients)*Math.sin(orients))+1/2);
+					
+					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
+					phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
+					//phaseCongMatrix[y][x] += (numerator/denominator);
 				}
 			}
 		}

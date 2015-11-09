@@ -4,11 +4,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import org.jdesktop.swingx.image.GaussianBlurFilter;
-
-import icy.image.IcyBufferedImage;
-import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
-import icy.type.DataType;
 import plugins.adufour.ezplug.*;
 
 public class CurvilinearStructures extends EzPlug {
@@ -28,7 +24,7 @@ public class CurvilinearStructures extends EzPlug {
 	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,0.05);
 	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",false);
 	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",false);
-	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",4,4,16,1);
+	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",2,2,8,1);
 	
 	EzGroup vesGroup = new EzGroup("Vesselness",betaThreshold,gammaThreshold);
 	EzGroup neuGroup = new EzGroup("Neuriteness",alphaSteer);
@@ -54,19 +50,16 @@ public class CurvilinearStructures extends EzPlug {
 		
 		double[] ors = {angleKernels.getValue()};
 		{
-			int tmp = 4;
-			for(int i=4;i<angleKernels.getValue();i*=2){
+			int tmp = 2;
+			for(int i=2;i<angleKernels.getValue();i*=2){
 				tmp=i;
-				}
+			}
 			ors = new double[tmp];
 		}
 		for(int i=0;i<ors.length;i++){
-			ors[i] = i*(360/ors.length);
+			ors[i] = i*(180/ors.length)*(Math.PI/180);
 		}
 		
-		if(!(vesselness.getValue() || vesPhase.getValue() || neuriteness.getValue() || neuPhase.getValue())){
-			return;
-			}
 		if(vesselness.getValue()){
 			ves = new Vesselness2D(img, betaThreshold.getValue(), (gammaThreshold.getValue()));
 			addSequence(new Sequence("Vesselness",ves.makeImage2D()));
@@ -87,20 +80,20 @@ public class CurvilinearStructures extends EzPlug {
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
 			addSequence(new Sequence("Neuriteness",neu.makeImageWithPhase2D()));
 		}
-		//addSequence(new Sequence("Phase congruency",getImage()));
+//		addSequence(new Sequence("Phase congruency",getImage()));
 	}
 	
-	private IcyBufferedImage getImage(){
-		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
-		ret.beginUpdate();
-		for(int y=0;y<Filter.phaseCong.length;y++){
-			for(int x=0;x<Filter.phaseCong[y].length;x++){
-				ret.setDataAsDouble(x, y, 0, Filter.phaseCong[y][x]);
-			}
-		}
-		ret.endUpdate();
-		return ret;
-	}
+//	private IcyBufferedImage getImage(){
+//		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
+//		ret.beginUpdate();
+//		for(int y=0;y<Filter.phaseCong.length;y++){
+//			for(int x=0;x<Filter.phaseCong[y].length;x++){
+//				ret.setDataAsDouble(x, y, 0, Filter.phaseCong[y][x]);
+//			}
+//		}
+//		ret.endUpdate();
+//		return ret;
+//	}
 	
 	@Override
 	public void clean() {
