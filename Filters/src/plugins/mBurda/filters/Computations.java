@@ -54,8 +54,8 @@ public class Computations {
 	public static double getLogGaborKernelPoint(int x, int y, double scale,
 			double orientation) {
 		double pointValue = Math
-				.exp((-(Math.log(Math.sqrt(x * x + y * y) / scale) * (Math
-						.log(Math.sqrt(x * x + y * y) / scale))) / (2 * ((Math
+				.exp((-(Math.log(Math.sqrt(x * x + y * y) / (1/scale)) * (Math
+						.log(Math.sqrt(x * x + y * y) / (1/scale)))) / (2 * ((Math
 						.log(8.5) * Math.log(8.5))))));
 
 		double theta = Math.atan2(-y, x);
