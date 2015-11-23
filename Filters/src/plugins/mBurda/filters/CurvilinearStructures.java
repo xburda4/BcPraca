@@ -2,9 +2,17 @@ package plugins.mBurda.filters;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import org.jdesktop.swingx.image.GaussianBlurFilter;
+
+import icy.image.IcyBufferedImage;
+import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
+import icy.type.DataType;
 import plugins.adufour.ezplug.*;
 
 public class CurvilinearStructures extends EzPlug {
@@ -17,14 +25,14 @@ public class CurvilinearStructures extends EzPlug {
 	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",false);
 	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",false);
 	EzVarDouble betaThreshold =new EzVarDouble("Disparsity control",0,-50,50,0.05);
-	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-2,2,0.02);
+	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-5,5,0.02);
 	EzVarDouble alphaSteer = new EzVarDouble("Steerable filter equivalent",0,-50,50,0.05);
 	EzVarDouble cutoffValue = new EzVarDouble("Cutoff value",0,-100,100,1);
-	EzVarDouble threshold = new EzVarDouble("Threshold",0,-50,50,0.05);
+	EzVarDouble threshold = new EzVarDouble("Threshold",0,-100,100,1);
 	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,0.05);
 	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",false);
 	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",false);
-	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",2,2,8,1);
+	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",2,2,8,2);
 	
 	EzGroup vesGroup = new EzGroup("Vesselness",betaThreshold,gammaThreshold);
 	EzGroup neuGroup = new EzGroup("Neuriteness",alphaSteer);
@@ -46,7 +54,7 @@ public class CurvilinearStructures extends EzPlug {
 	protected void execute() {
 		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
 		BufferedImage img = getGrayScale(gauss.filter(getActiveImage(), null));
-		double[] scs = {0.0015,0.002,0.005,0.009,0.013};
+		double[] scs = {0.015,0.02,0.05,0.09,0.13};
 		
 		double[] ors = {angleKernels.getValue()};
 		{
@@ -80,15 +88,18 @@ public class CurvilinearStructures extends EzPlug {
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
 			addSequence(new Sequence("Neuriteness",neu.makeImageWithPhase2D()));
 		}
-//		addSequence(new Sequence("Phase congruency",getImage()));
+		
+//		addSequence(new Sequence("Gabor",getImage()));
 	}
 	
 //	private IcyBufferedImage getImage(){
-//		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
+////		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
+//		IcyBufferedImage ret = new IcyBufferedImage(200, 200, IcyColorModel.createInstance(1, DataType.DOUBLE));
 //		ret.beginUpdate();
-//		for(int y=0;y<Filter.phaseCong.length;y++){
-//			for(int x=0;x<Filter.phaseCong[y].length;x++){
-//				ret.setDataAsDouble(x, y, 0, Filter.phaseCong[y][x]);
+//		double[][] dob = Computations.getGaborKernel2D(200, 200, 0.13, 90, 0.75, 3);
+//		for(int y=0;y<200;y++){
+//			for(int x=0;x<200;x++){
+//				ret.setDataAsDouble(x, y, 0, dob[x][y]);
 //			}
 //		}
 //		ret.endUpdate();
@@ -107,5 +118,22 @@ public class CurvilinearStructures extends EzPlug {
 		g.drawImage(original, 0, 0, null);
 		g.dispose(); 
 		return image;
+	}
+	
+	public static void runOnSpecPars(BufferedImage input,int blur,double disparsity,double brightness,int threshold,double cutoff,double gainFactor) throws IOException{
+		double[] scs = {0.0015,0.002,0.005,0.009,0.013};
+		double[] ors = {4};
+		for(int i=0;i<ors.length;i++){
+			ors[i] = i*(180/ors.length)*(Math.PI/180);
+		}
+		GaussianBlurFilter gauss = new GaussianBlurFilter(blur);
+		BufferedImage img = gauss.filter(input, null);
+		
+		Vesselness2D ves = new Vesselness2D(img);
+		
+		Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(img, false), scs, ors, threshold, cutoff, gainFactor);
+		img = ves.makeImageWithPhase2D();
+		File f = new File("/home/marek/Images/Img_"+ disparsity +"_"+ brightness+"_"+ cutoff +"_"+gainFactor+".png");
+		ImageIO.write(img, "PNG", f);
 	}
 }

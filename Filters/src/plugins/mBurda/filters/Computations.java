@@ -11,11 +11,29 @@ import icy.image.IcyBufferedImage;
 
 public class Computations {
 
+	/**
+	 * Returns real part of logGabor kernel in frequency domain
+	 * @param width of image
+	 * @param height of image
+	 * @param wavelength 1/frequency
+	 * @param angle of signal
+	 * @return image of LogGabor kernel in frequency domain as 2D double array
+	 * */
 	public static double[][] getGaborKernel2D(int width, int height,
 			double wavelength, double angle) {
 		return getGaborKernel2D(width, height, wavelength, angle, 8.5, 0.75);
 	}
 
+	/**
+	 * Returns  real part of logGabor kernel in frequency domain.
+	 * @param width of image
+	 * @param height of image
+	 * @param wavelength 1/frequency
+	 * @param angle of signal
+	 * @param sigmaOnf determines scale of centre frequency
+	 * @param thetaSigma standard deviation of gauss with respect to angle
+	 * @return image of LogGabor kernel in frequency domain as 2D double array
+	 * */
 	public static double[][] getGaborKernel2D(int width, int height,
 		double wavelength, double angle, double sigmaOnf, double thetaSigma) {
 		angle = angle * Math.PI / 180;
@@ -51,15 +69,22 @@ public class Computations {
 		return kernel2D;
 	}
 
+	/**
+	 * Returns one pixel of logGabor kernel
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param scale of frequency of logGabor filter
+	 * @param angle of signal 
+	 * @return value of logGabor kernel at given coordinates
+	 * */
 	public static double getLogGaborKernelPoint(int x, int y, double scale,
 			double orientation) {
 		double pointValue = Math
 				.exp((-(Math.log(Math.sqrt(x * x + y * y) / (1/scale)) * (Math
 						.log(Math.sqrt(x * x + y * y) / (1/scale)))) / (2 * ((Math
-						.log(8.5) * Math.log(8.5))))));
+						.log(0.75) * Math.log(0.75))))));
 
 		double theta = Math.atan2(-y, x);
-		//orientation = orientation;
 		double ds = Math.sin(theta) * Math.cos(orientation) - Math.cos(theta)
 				* Math.sin(orientation);
 		double dc = Math.cos(theta) * Math.cos(orientation) + Math.sin(theta)
@@ -69,6 +94,13 @@ public class Computations {
 		return pointValue;
 	}
 
+	/**
+	 * Multiplies image in frequency domain and logGabor kernel in frequency domain
+	 * @param ComplexMatrix image in frequency domain
+	 * @param double scale of wavelength of logGabor kernel
+	 * @param double angle of wave of logGabor kernel
+	 * @return double[][][] real and imaginary component of every pixel in image
+	 * */
 	public static double[][][] multiFTKernel(ComplexMatrix ftImg,double scale,double angle) {
 		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
 		double logGabPoint;
@@ -83,6 +115,16 @@ public class Computations {
 		return output;
 	}
 	
+	/**
+	 * Computes phase congruency with specified variables.
+	 * @param ftImg input image in frequency domain
+	 * @param scales scales of wavelengths of logGabor kernels
+	 * @param orientations angles of waves of logGabor kernels
+	 * @param threshold 
+	 * @param cutoffValue
+	 * @param gainFactor 
+	 * @return Returns matrix array of tensors
+	 */
 	public static Matrix[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
 			double[] orientations, double threshold, double cutoffValue,
 			double gainFactor) {
@@ -145,75 +187,19 @@ public class Computations {
 					mat.set(1, 1, (Math.sin(orients)*Math.sin(orients))+1/2);
 					
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
-					phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
+					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
 					//phaseCongMatrix[y][x] += (numerator/denominator);
 				}
 			}
 		}
 		return phaseCongMatrix;
 	}
-	
-	
-	
-	
-	
-//	public static double[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
-//			double[] orientations, double threshold, double cutoffValue,
-//			double gainFactor) {
-//		if(ftImg == null || scales == null || orientations == null) {
-//			MessageDialog.showDialog("Incorrect argument");
-//			return null;
-//		}
-//		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
-//				.getNrow()][ftImg.getNcol()];
-//		
-//		for (int orients = 0; orients < orientations.length; orients++) {
-//			for (int scs = 0; scs < scales.length; scs++) {
-//				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients]);
-//			}
-//		}
-//		
-//		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase;
-//		double[][] phaseCongMatrix = new double[ftImg.getNrow()][ftImg.getNcol()];
-//		for (int y = 0; y < ftImg.getNrow(); y++) {
-//			for (int x = 0; x < ftImg.getNcol(); x++) {
-//				phaseCongMatrix[y][x] = 0;
-//				for (int orients = 0; orients < orientations.length; orients++) {
-//					
-//					sumOfAmplis = 0; meanPhase = 0; numerator = 0; denominator = 0;
-//					
-//					for (int scs = 0; scs < scales.length; scs++) {
-//						sumOfAmplis+=componentSO[orients][scs][0][y][x];
-//						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
-//						else Amax = Math.max(Amax,componentSO[orients][scs][0][y][x]);
-//						meanPhase += componentSO[orients][scs][1][y][x];
-//					}
-//					meanPhase /= scales.length;
-//					
-//					for (int scs = 0; scs < scales.length; scs++) {
-//						if(componentSO[orients][scs][0][y][x] == 0){
-//							numerator = 0;
-//							continue;
-//						}
-//						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
-//								Math.abs(Math.sin(componentSO[orients][scs][1][y][x])-meanPhase);
-//						numerator = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
-//						if(numerator < 0){
-//							numerator = 0;
-//							continue;
-//						}
-//						
-//						weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001))));
-//						numerator *= weight;
-//					}
-//					denominator += 0.000000000001;
-//					phaseCongMatrix[y][x] += (numerator/denominator);
-//				}
-//			}
-//		}
-//		return phaseCongMatrix;
-//	}
-
+	/**
+	 * Transforms image to frequency domain.
+	 * @param img input image
+	 * @param isAlt if true, method returns magnitude and phase,otherwise real and imaginary part
+	 * @return Returns image in frequency domain.
+	 */
 	public static ComplexMatrix FourierTransform2D(IcyBufferedImage img,
 			boolean isAlt){
 		double[][] matrix = new double[img.getHeight()][img.getWidth()];
@@ -225,6 +211,12 @@ public class Computations {
 		return FourierTransform2D(matrix, isAlt);
 	}
 	
+	/**
+	 * Transforms image to frequency domain
+	 * @param img input image
+	 * @param isAlt if true, method returns magnitude and phase,otherwise real and imaginary part 
+	 * @return image in frequency domain
+	 */
 	public static ComplexMatrix FourierTransform2D(BufferedImage img,
 			boolean isAlt){
 		double[][] matrix = new double[img.getHeight()][img.getWidth()];
@@ -236,6 +228,12 @@ public class Computations {
 		return FourierTransform2D(matrix, isAlt);
 	}
 
+	/**
+	 * Transforms image to frequency domain
+	 * @param input 2D double array
+	 * @param isAlt if true, method returns magnitude and phase,otherwise real and imaginary part
+	 * @return image in frequency domain
+	 */
 	public static ComplexMatrix FourierTransform2D(double[][] input,
 			boolean isAlt) {
 		if (input == null)
@@ -298,6 +296,12 @@ public class Computations {
 		return output;
 	}
 
+	/**
+	 * Creates double array from complex matrix
+	 * @param input complex matrix
+	 * @param isAlt if true returns real part,if false returns imaginary part
+	 * @return 2D double array
+	 */
 	public static double[][] fttToDoubleArr2D(ComplexMatrix input,boolean isAlt){
 		if (input == null)
 			return null;
@@ -312,6 +316,12 @@ public class Computations {
 		return output;
 	}
 	
+	/**
+	 * Transforms image from frequency domain.
+	 * @param input image in frequency domain.
+	 * @param isAlt if true,computes from magnitude and phase
+	 * @return image in spatial domain
+	 */
 	public static double[][][] InverseFourierTransform2D(ComplexMatrix input,boolean isAlt) {
 		if (input == null)
 			return null;
@@ -372,7 +382,11 @@ public class Computations {
 		return output;
 	}
 
-	
+	/**
+	 * Create complex matrix from double array.
+	 * @param input 3D double array
+	 * @return 
+	 */
 	public static ComplexMatrix createComplexMatrix(double[][][] input){
 		ComplexMatrix output = new ComplexMatrix(input[0].length,input[0][0].length);
 		for(int y=0;y<input[0].length;y++){

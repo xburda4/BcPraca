@@ -9,7 +9,12 @@ public abstract class Filter {
 	protected static IcyBufferedImage source;
 	protected static Matrix[][] phaseCong;
 	
-	
+	/**
+	 * Computes eigenvalues of image at point (x,y)
+	 * @param x x-coordinate
+	 * @param y y-coordinate
+	 * @return array of eigenvalues
+	 */
 	public static double[] getEigenValues(int x,int y){
 		Matrix hessian = new Matrix(2,2);
 		WritableRaster raster = source.getRaster();
@@ -44,6 +49,12 @@ public abstract class Filter {
 		return eig;
 	}
 	
+	/**
+	 * Computes eigen-values of tensor of phase congruencies
+	 * @param x x-coordinate
+	 * @param y y-coordinate
+	 * @return array of eigen-values
+	 */
 	public double[] getEigenValuesWithPhase(int x,int y){
 		double[] eig = phaseCong[y][x].eig().getRealEigenvalues();
 		double tmp = 0;
@@ -52,7 +63,6 @@ public abstract class Filter {
 			eig[1] = eig[0];
 			eig[0] = tmp;
 		}
-		if((x<150) && (x>125)) System.out.println(eig[1]);
 		return eig;
 	}
 }
