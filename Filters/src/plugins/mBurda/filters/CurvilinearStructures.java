@@ -25,7 +25,7 @@ public class CurvilinearStructures extends EzPlug {
 	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",false);
 	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",false);
 	EzVarDouble betaThreshold =new EzVarDouble("Disparsity control",0,-50,50,0.05);
-	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-5,5,0.02);
+	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-30,30,0.02);
 	EzVarDouble alphaSteer = new EzVarDouble("Steerable filter equivalent",0,-50,50,0.05);
 	EzVarDouble cutoffValue = new EzVarDouble("Cutoff value",0,-100,100,1);
 	EzVarDouble threshold = new EzVarDouble("Threshold",0,-100,100,1);
@@ -33,12 +33,13 @@ public class CurvilinearStructures extends EzPlug {
 	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",false);
 	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",false);
 	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",2,2,8,2);
+	EzVarInteger scaleKernels = new EzVarInteger("Number of kernels for scale computation.",1,1,4,1);
 	
 	EzGroup vesGroup = new EzGroup("Vesselness",betaThreshold,gammaThreshold);
 	EzGroup neuGroup = new EzGroup("Neuriteness",alphaSteer);
 	EzGroup phaseCongGroup = new EzGroup("Phase congruency parameters",threshold,cutoffValue,gainFactor);
 	EzGroup outputGroup = new EzGroup("Show output",vesselness,vesPhase,neuriteness,neuPhase);
-	EzGroup angleGroup = new EzGroup("Angle parametrization",angleKernels);
+	EzGroup kernelGroup = new EzGroup("Kernel parametrization",angleKernels,scaleKernels);
 	
 	@Override
 	protected void initialize() {
@@ -47,15 +48,27 @@ public class CurvilinearStructures extends EzPlug {
 		addEzComponent(vesGroup);
 		addEzComponent(neuGroup);
 		addEzComponent(phaseCongGroup);
-		addEzComponent(angleGroup);
+		addEzComponent(kernelGroup);
 	}
 
 	@Override
 	protected void execute() {
 		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
-		BufferedImage img = getGrayScale(gauss.filter(getActiveImage(), null));
-		double[] scs = {0.015,0.02,0.05,0.09,0.13};
+		//BufferedImage img = getGrayScale(gauss.filter(getActiveImage(), null));
+		BufferedImage img = gauss.filter(getActiveImage(), null);
+//		double[] scs = {scaleKernels.getValue()};
+//		{
+//			int tmp = 1;
+//			for(int i=2;i<angleKernels.getValue();i*=2){
+//				tmp=i;
+//			}
+//			scs = new double[tmp];
+//		}
+//		for(int i=0;i<scs.length;i++){
+//			scs[i] = 3* Math.pow(2.1,i);
+//		}
 		
+		double scs[] = {/*0.05,0.07,0.15,0.015,0.02,0.035*/0.003,0.005,0.01,0.008};
 		double[] ors = {angleKernels.getValue()};
 		{
 			int tmp = 2;
@@ -69,14 +82,14 @@ public class CurvilinearStructures extends EzPlug {
 		}
 		
 		if(vesselness.getValue()){
-			ves = new Vesselness2D(img, betaThreshold.getValue(), (gammaThreshold.getValue()));
+			ves = new Vesselness2D(img, betaThreshold.getValue(), gammaThreshold.getValue());
 			addSequence(new Sequence("Vesselness",ves.makeImage2D()));
 		}
 		if(vesPhase.getValue()){
 			if(ves == null) ves = new Vesselness2D(img, betaThreshold.getValue(), gammaThreshold.getValue());
-			Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source, false), 
+			Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source,false), 
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
-			addSequence(new Sequence("Vesslness with phase congurency",ves.makeImageWithPhase2D()));
+			addSequence(new Sequence("Vesselness with phase congurency",ves.makeImageWithPhase2D()));
 		}
 		if(neuriteness.getValue()){
 			neu = new Neuriteness2D(img, alphaSteer.getValue());
@@ -84,14 +97,51 @@ public class CurvilinearStructures extends EzPlug {
 		}
 		if(neuPhase.getValue()){
 			if(neu == null) neu = new Neuriteness2D(img, alphaSteer.getValue());
-			if(!vesPhase.getValue()) Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source, false), 
+			if(!vesPhase.getValue()) Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source,true), 
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
-			addSequence(new Sequence("Neuriteness",neu.makeImageWithPhase2D()));
+			addSequence(new Sequence("Neuriteness with phase",neu.makeImageWithPhase2D()));
 		}
 		
-//		addSequence(new Sequence("Gabor",getImage()));
+		/*
+		 * Toto všetko je tu len na testovanie a výpis medzivýpočtov
+		 * 
+		 * */
+//		double[][] inp = {{7,13,25,69},{854,1,444,32}};
+//		Computations.getThatFourier(inp);
+		IcyBufferedImage in = getActiveImage();
+//		addSequence(new Sequence("FT Imag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),false))));
+//		addSequence(new Sequence("FT Real",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),true))));
+//		addSequence(new Sequence("Kernel_003",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.003, 0))));
+//		addSequence(new Sequence("Kernel_005",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.005, 0))));
+//		addSequence(new Sequence("Kernel_01",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.01, 0))));
+//		addSequence(new Sequence("Kernel_008",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.008, 0))));
+//		addSequence(new Sequence("Kernel",Filters.makeImage2D(Computations.getGaborKernel2D(200, 200, 0.09, 0))));
+
+//		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.07, 45)),false)[0])));
+//		addSequence(new Sequence("MultiReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0)),true))));
+//		addSequence(new Sequence("MultiImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0)),false))));
+
+//		addSequence(new Sequence("InversMultiReal",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0))),false)[0])));         
+//		addSequence(new Sequence("InversMultiImag",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0))),false)[1])));
+//		//		
+		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.FourierTransform2D(in,false),false)[0])));
+		
+//		getPhase();
+		}
+	/*
+	 * Metóda bude zmazaná,slúži na výpis fázových kongruencií
+	 * */
+	private void getPhase(){
+		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseValues.length, Filter.phaseValues[0].length, IcyColorModel.createInstance(1, DataType.DOUBLE));
+		ret.beginUpdate();
+		for(int y=0;y<Filter.phaseValues.length;y++){
+			for(int x=0;x<Filter.phaseValues[y].length;x++){
+				ret.setData(x, y, 0, Filter.phaseValues[y][x]);
+			}
+		}
+		ret.endUpdate();
+		addSequence(new Sequence("Phase congruency",ret));
 	}
-	
 //	private IcyBufferedImage getImage(){
 ////		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
 //		IcyBufferedImage ret = new IcyBufferedImage(200, 200, IcyColorModel.createInstance(1, DataType.DOUBLE));
@@ -112,11 +162,13 @@ public class CurvilinearStructures extends EzPlug {
 	}
 	
 	private BufferedImage getGrayScale(BufferedImage original){
+		addSequence(new Sequence("Before",original));
 		BufferedImage image = new BufferedImage(original.getWidth(), original.getHeight(),
 				BufferedImage.TYPE_BYTE_GRAY);  
 		Graphics g = image.getGraphics();
 		g.drawImage(original, 0, 0, null);
 		g.dispose(); 
+		addSequence(new Sequence("After",image));
 		return image;
 	}
 	
@@ -131,7 +183,7 @@ public class CurvilinearStructures extends EzPlug {
 		
 		Vesselness2D ves = new Vesselness2D(img);
 		
-		Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(img, false), scs, ors, threshold, cutoff, gainFactor);
+		Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(img,false), scs, ors, threshold, cutoff, gainFactor);
 		img = ves.makeImageWithPhase2D();
 		File f = new File("/home/marek/Images/Img_"+ disparsity +"_"+ brightness+"_"+ cutoff +"_"+gainFactor+".png");
 		ImageIO.write(img, "PNG", f);
