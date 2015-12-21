@@ -24,6 +24,36 @@ public class Computations {
 		return getGaborKernel2D(width, height, wavelength, angle, 0.55, 0.3);
 	}
 
+	public static double[][] lowPassFilter(int width,int height,int radius){
+		double[][] lowpass = new double[height][width];
+		for(int y= -(height/2);y<height/2;y++){
+			for(int x = -(width/2);x<width/2;x++){
+				lowpass[y + (height/2)][x + (width/2)] = Math.sqrt(x*x+y*y) < radius ? 1 : 0 ;
+			}
+		}
+		return lowpass;
+	}
+	
+	public static double[][] highPassFilter(int width,int height,int radius){
+		double[][] highpass = new double[height][width];
+		for(int y= -(height/2);y<height/2;y++){
+			for(int x = -(width/2);x<width/2;x++){
+				highpass[y + (height/2)][x + (width/2)] = Math.sqrt(x*x+y*y) > radius ? 1 : 0 ;
+			}
+		}
+		return highpass;
+	}
+	
+	public static double[][] bandwidthPassFilter(int width,int height,int min,int max){
+		double[][] highpass = new double[height][width];
+		for(int y= -(height/2);y<height/2;y++){
+			for(int x = -(width/2);x<width/2;x++){
+				highpass[y + (height/2)][x + (width/2)] = (Math.sqrt(x*x+y*y)< max)&&(Math.sqrt(x*x+y*y) > min) ? 1 : 0 ;
+			}
+		}
+		return highpass;
+	}
+	
 	/**
 	 * Returns  real part of logGabor kernel in frequency domain.
 	 * @param width of image
@@ -110,6 +140,7 @@ public class Computations {
 		
 		double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle);
 		double tmp0,tmp1;
+		double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow(),Math.min(ftImg.getNcol(), ftImg.getNrow())/2);
 		for(int y=0;y<ftImg.getNrow();y++){
 			for(int x=0;x<ftImg.getNcol();x++){
 				logGabPoint = kernel[y][x];
@@ -118,11 +149,9 @@ public class Computations {
 				
 				tmp0 = ftImg.getElementCopy(y, x).getReal();
 				tmp1 = ftImg.getElementCopy(y, x).getImag();
-				output[0][y][x] = tmp0;
-				output[1][y][x] = tmp1;
-				
-				output[0][y][x] *= logGabPoint ;
-				output[1][y][x] *= logGabPoint ;
+			
+				output[0][y][x] = tmp0 * logGabPoint * lp[y][x];
+				output[1][y][x] = tmp1 * logGabPoint * lp[y][x];
 			}
 		}
 		return output;
@@ -146,6 +175,8 @@ public class Computations {
 			return null;
 		}
 
+		/*doble[rotácie][škály][real/imag][y][x]
+		 * */
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
 		
@@ -160,7 +191,6 @@ public class Computations {
 					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
 						temp0 = componentSO[orients][scs][0][y][x];
 						temp1 = componentSO[orients][scs][1][y][x];
-//						if(orients == 0 && scs == 0)Filter.phaseValues[y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
 						componentSO[orients][scs][0][y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
 						componentSO[orients][scs][1][y][x] = Math.atan2(temp1,temp0);
 						}
@@ -186,7 +216,9 @@ public class Computations {
 						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
 						else Amax = Math.max(Amax,componentSO[orients][scs][0][y][x]);
 						meanPhase += componentSO[orients][scs][1][y][x];
+						
 					}
+					weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001))));
 					meanPhase /= scales.length;
 					denominator = sumOfAmplis;
 
@@ -195,10 +227,7 @@ public class Computations {
 								Math.abs(Math.sin(componentSO[orients][scs][1][y][x]-meanPhase));
 						tmp = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
 						if(tmp < 0) tmp = 0;
-						weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001)-1)));
-						tmp /= weight;
-//						Filter.phaseValues[y][x] ;
-						numerator += tmp;
+						numerator += (tmp/weight);
 					}
 					denominator += 0.000000000001;
 					
@@ -210,10 +239,6 @@ public class Computations {
 					
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
 					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
-					
-					if(orients == 0) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
-					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
-					
 					
 					Filter.phaseValues[y][x] += numerator/denominator;
 					//phaseCongMatrix[y][x] += (numerator/denominator);
@@ -393,7 +418,6 @@ public class Computations {
 				}	
 			}
 		}
-		
 		
 		ComplexMatrix rowMatrix;
 		Complex[] tmpRow = new Complex[input.getNcol()];
