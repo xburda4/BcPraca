@@ -56,23 +56,23 @@ public class CurvilinearStructures extends EzPlug {
 		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
 		//BufferedImage img = getGrayScale(gauss.filter(getActiveImage(), null));
 		BufferedImage img = gauss.filter(getActiveImage(), null);
-//		double[] scs = {scaleKernels.getValue()};
-//		{
-//			int tmp = 1;
-//			for(int i=2;i<angleKernels.getValue();i*=2){
-//				tmp=i;
-//			}
-//			scs = new double[tmp];
-//		}
-//		for(int i=0;i<scs.length;i++){
-//			scs[i] = 3* Math.pow(2.1,i);
-//		}
+		double[] scs = {scaleKernels.getValue()};
+		{
+			int tmp = 1;
+			for(int i=2;i<=scaleKernels.getValue();i*=2){
+				tmp=i;
+			}
+			scs = new double[tmp];
+		}
+		for(int i=0;i<scs.length;i++){
+			scs[i] = 3* Math.pow(2.1,i);
+		}
 		
-		double scs[] = {/*0.05,0.07,0.15,0.015,0.02,0.035*/0.003,0.005,0.01,0.008};
+		//double scs[] = {/*0.05,0.07,0.15,0.015,0.02,0.035*/0.003,0.005,0.01,0.008};
 		double[] ors = {angleKernels.getValue()};
 		{
 			int tmp = 2;
-			for(int i=2;i<angleKernels.getValue();i*=2){
+			for(int i=2;i<=angleKernels.getValue();i*=2){
 				tmp=i;
 			}
 			ors = new double[tmp];
@@ -111,18 +111,18 @@ public class CurvilinearStructures extends EzPlug {
 		IcyBufferedImage in = getActiveImage();
 //		addSequence(new Sequence("FT Imag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),false))));
 //		addSequence(new Sequence("FT Real",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),true))));
-//		addSequence(new Sequence("Kernel_003",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.003, 0))));
-//		addSequence(new Sequence("Kernel_005",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.005, 0))));
-//		addSequence(new Sequence("Kernel_01",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.01, 0))));
-//		addSequence(new Sequence("Kernel_008",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 0.008, 0))));
+		addSequence(new Sequence("Kernel_003",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 3, 0))));
+		addSequence(new Sequence("Kernel_005",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 6.3, 0))));
+		addSequence(new Sequence("Kernel_01",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 13.23, 0))));
+		addSequence(new Sequence("Kernel_008",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 27.783, 0))));
 //		addSequence(new Sequence("Kernel",Filters.makeImage2D(Computations.getGaborKernel2D(200, 200, 0.09, 0))));
 
 //		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.07, 45)),false)[0])));
-//		addSequence(new Sequence("MultiReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0)),true))));
-//		addSequence(new Sequence("MultiImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0)),false))));
-
-//		addSequence(new Sequence("InversMultiReal",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0))),false)[0])));         
-//		addSequence(new Sequence("InversMultiImag",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, 0))),false)[1])));
+//		addSequence(new Sequence("MultiReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, Math.PI/2)),true))));
+//		addSequence(new Sequence("MultiImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, Math.PI/2)),false))));
+//
+//		addSequence(new Sequence("InversMultiReal",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, Math.PI/2))),false)[0])));         
+//		addSequence(new Sequence("InversMultiImag",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.05, Math.PI/2))),false)[1])));
 //		//		
 		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.FourierTransform2D(in,false),false)[0])));
 		

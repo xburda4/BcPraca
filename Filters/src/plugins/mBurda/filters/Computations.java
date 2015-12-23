@@ -28,7 +28,8 @@ public class Computations {
 		double[][] lowpass = new double[height][width];
 		for(int y= -(height/2);y<height/2;y++){
 			for(int x = -(width/2);x<width/2;x++){
-				lowpass[y + (height/2)][x + (width/2)] = Math.sqrt(x*x+y*y) < radius ? 1 : 0 ;
+				//lowpass[y + (height/2)][x + (width/2)] = Math.sqrt(x*x+y*y) < radius ? 1 : 0 ;
+				lowpass[y + (height/2)][x + (width/2)] = 1.0/ (1+Math.pow((Math.sqrt(x*x+y*y)/(0.45*width)),30));
 			}
 		}
 		return lowpass;
@@ -59,7 +60,7 @@ public class Computations {
 	 * @param width of image
 	 * @param height of image
 	 * @param wavelength 1/frequency
-	 * @param angle of signal
+	 * @param angle of signal,in radians
 	 * @param sigmaOnf determines scale of centre frequency
 	 * @param thetaSigma standard deviation of gauss with respect to angle
 	 * @return image of LogGabor kernel in frequency domain as 2D double array
@@ -74,7 +75,7 @@ public class Computations {
 //		long time = System.nanoTime();
 		for (int x = -(width / 2); x < (width / 2); x++) {
 			for (int y = -(height / 2); y < (height / 2); y++) {
-				double position = Math.sqrt(x * x + y * y);
+				double position = Math.sqrt((double)(x)/width * (double)(x)/width + (double)(y)/height * (double)(y)/height);
 				radialComp = Math
 						.exp(-(Math.log(position / centerFreq) * (Math
 								.log(position / centerFreq))) / (2 * ((Math
@@ -97,6 +98,9 @@ public class Computations {
 						* angulComp;
 			}
 		}
+		//nastavenie DC komponenty na nulu, logGabor má nulu vždy
+		//kernel2D[height/2][width/2] = 0;
+		
 //		time = System.nanoTime() - time;
 //		System.out.println("Kernel time is " + time + " ns");
 		return kernel2D;
@@ -143,13 +147,14 @@ public class Computations {
 		double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow(),Math.min(ftImg.getNcol(), ftImg.getNrow())/2);
 		for(int y=0;y<ftImg.getNrow();y++){
 			for(int x=0;x<ftImg.getNcol();x++){
+				
 				logGabPoint = kernel[y][x];
 				//logGabPoint = getLogGaborKernelPoint(x - ftImg.getNcol()/2,y - ftImg.getNrow()/2, scale, angle,0.75);
 				//možné použitie fcie getLogGaborKernel() pred cyklom
 				
 				tmp0 = ftImg.getElementCopy(y, x).getReal();
 				tmp1 = ftImg.getElementCopy(y, x).getImag();
-			
+				
 				output[0][y][x] = tmp0 * logGabPoint * lp[y][x];
 				output[1][y][x] = tmp1 * logGabPoint * lp[y][x];
 			}
@@ -175,7 +180,7 @@ public class Computations {
 			return null;
 		}
 
-		/*doble[rotácie][škály][real/imag][y][x]
+		/*double[rotácie][škály][real/imag][y][x]
 		 * */
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
@@ -316,7 +321,7 @@ public class Computations {
 					.getTransformedDataAsComplex());
 			for (int x = 0; x < output.getNcol(); x++) {
 				output.setElement(y, /*x,rowMatrix.getElementCopy(0, x) );*/(x+output.getNcol()/2)%output.getNcol(), rowMatrix.getElementCopy(0, x));
-				output.setElement(y, x, output.getElementCopy(y, x).getReal(),output.getElementCopy(y, x).getImag());
+//				output.setElement(y, x, output.getElementCopy(y, x).getReal(),output.getElementCopy(y, x).getImag());
 			}
 		}
 		tmpRow = new Complex[output.getNrow()];
@@ -331,7 +336,11 @@ public class Computations {
 					.getTransformedDataAsComplex());
 			for (int y = 0; y < output.getNrow(); y++) {
 				output.setElement(y, x, /*rowMatrix.getElementCopy(0, y));*/rowMatrix.getElementCopy(0, (y+rowMatrix.getNcol()/2)%rowMatrix.getNcol()));
-				output.setElement(y, x, output.getElementCopy(y, x).getReal(),output.getElementCopy(y, x).getImag()*(-1));
+				
+				
+				//output.setElement(y, x, output.getElementCopy(y, x).getReal(),output.getElementCopy(y, x).getImag()*(-1));
+			
+			
 			}
 		}
 		double tmp0,tmp1;
@@ -428,7 +437,11 @@ public class Computations {
 					tmpRow[x] = input.getElementCopy(y, /*x);*/(x+input.getNcol()/2)%input.getNcol());
 				} else {
 					number = input.getElementCopy(y, /*x);*/(x+input.getNcol()/2)%input.getNcol());
-					number.setImag(number.getImag()*(-1));
+					
+					
+					//number.setImag(number.getImag()*(-1));
+					
+					
 					tmpRow[x] = number;
 				}
 			}
@@ -465,7 +478,7 @@ public class Computations {
 		for (int y = 0; y < input.getNrow(); y++) {
 			for (int x = 0; x < input.getNcol(); x++) {
 				output[0][y][x] = input.getElementCopy(y, x).getReal();
-				output[1][y][x] = input.getElementCopy(y, x).getImag()*(-1);
+				output[1][y][x] = input.getElementCopy(y, x).getImag();//*(-1);
 			}
 		}
 		return output;
