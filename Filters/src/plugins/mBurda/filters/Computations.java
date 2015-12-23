@@ -20,8 +20,8 @@ public class Computations {
 	 * @return image of LogGabor kernel in frequency domain as 2D double array
 	 * */
 	public static double[][] getGaborKernel2D(int width, int height,
-			double wavelength, double angle) {
-		return getGaborKernel2D(width, height, wavelength, angle, 0.55, 0.3);
+			double wavelength, double angle,int numOfOrients) {
+		return getGaborKernel2D(width, height, wavelength, angle, 0.55, numOfOrients);
 	}
 
 	public static double[][] lowPassFilter(int width,int height,int radius){
@@ -66,7 +66,7 @@ public class Computations {
 	 * @return image of LogGabor kernel in frequency domain as 2D double array
 	 * */
 	public static double[][] getGaborKernel2D(int width, int height,
-		double wavelength, double angle, double sigmaOnf, double thetaSigma) {
+		double wavelength, double angle, double sigmaOnf, int numberOfOrients) {
 //		angle = angle * Math.PI / 180;
 		double centerFreq = 1.0 / wavelength;
 		double radialComp;
@@ -88,11 +88,11 @@ public class Computations {
 				dc = Math.cos(theta) * Math.cos(angle) + Math.sin(theta)
 						* Math.sin(angle);
 				dtheta = Math.abs(Math.atan2(ds, dc));
-				angulComp = Math.exp(-(dtheta * dtheta)
-						/ (2 * (thetaSigma * thetaSigma)));
+//				angulComp = Math.exp(-(dtheta * dtheta)
+//						/ (2 * (thetaSigma * thetaSigma)));
 				
-//				dtheta = Math.min(dtheta*numberOfOrients/2,Math.PI);
-//				angulComp = (Math.cos(dtheta)+1)/2;
+				dtheta = Math.min(dtheta*numberOfOrients/2,Math.PI);
+				angulComp = (Math.cos(dtheta)+1)/2;
 				kernel2D[y + height / 2][x + width / 2] = kernel2D[y + height
 						/ 2][x + width / 2]
 						* angulComp;
@@ -138,11 +138,11 @@ public class Computations {
 	 * @param double angle of wave of logGabor kernel
 	 * @return double[][][] real and imaginary component of every pixel in image
 	 * */
-	public static double[][][] multiFTKernel(ComplexMatrix ftImg,double scale,double angle) {
+	public static double[][][] multiFTKernel(ComplexMatrix ftImg,double scale,double angle,int numberOfOrients) {
 		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
 		double logGabPoint;
 		
-		double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle);
+		double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle,numberOfOrients);
 		double tmp0,tmp1;
 		double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow(),Math.min(ftImg.getNcol(), ftImg.getNrow())/2);
 		for(int y=0;y<ftImg.getNrow();y++){
@@ -190,7 +190,7 @@ public class Computations {
 		double temp0,temp1;
 		for (int orients = 0; orients < orientations.length; orients++) {
 			for (int scs = 0; scs < scales.length; scs++) {
-				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients]);
+				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients],orientations.length);
 				componentSO[orients][scs] = InverseFourierTransform2D(createComplexMatrix(componentSO[orients][scs]),false);
 				for(int y=0;y<componentSO[orients][scs][0].length;y++){
 					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
