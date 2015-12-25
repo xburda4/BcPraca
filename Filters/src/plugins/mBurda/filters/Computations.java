@@ -82,7 +82,7 @@ public class Computations {
 								.log(sigmaOnf) * Math.log(sigmaOnf)))));
 				kernel2D[y + (height / 2)][x + (width / 2)] = radialComp;
 
-				theta = Math.atan2(-y, x);
+				theta = Math.atan2(-y/height, x/width);
 				ds = Math.sin(theta) * Math.cos(angle) - Math.cos(theta)
 						* Math.sin(angle);
 				dc = Math.cos(theta) * Math.cos(angle) + Math.sin(theta)
@@ -188,6 +188,12 @@ public class Computations {
 		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
 		
 		double temp0,temp1;
+		/*
+		 * Test
+		 * */
+		
+		double[][][][] absSO= new double[orientations.length][scales.length][ftImg.getNrow()][ftImg.getNcol()];
+		
 		for (int orients = 0; orients < orientations.length; orients++) {
 			for (int scs = 0; scs < scales.length; scs++) {
 				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients],orientations.length);
@@ -196,8 +202,12 @@ public class Computations {
 					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
 						temp0 = componentSO[orients][scs][0][y][x];
 						temp1 = componentSO[orients][scs][1][y][x];
-						componentSO[orients][scs][0][y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
-						componentSO[orients][scs][1][y][x] = Math.atan2(temp1,temp0);
+						
+						
+						absSO[orients][scs][y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
+//						componentSO[orients][scs][0][y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
+//						if(orients ==0 && scs ==0)Filter.phaseValues[y][x] = componentSO[0][0][0][y][x];
+//						componentSO[orients][scs][1][y][x] = Math.atan2(temp1,temp0);
 						}
 					}
 			}
@@ -206,7 +216,7 @@ public class Computations {
 		
 //		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
 		
-		
+		double sumE,sumO;
 		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase,tmp;
 		Matrix[][] phaseCongMatrix = new Matrix[ftImg.getNrow()][ftImg.getNcol()];
 		for (int y = 0; y < ftImg.getNrow(); y++) {
@@ -214,23 +224,32 @@ public class Computations {
 				//phaseCongMatrix[y][x] = new Matrix(2,2);
 				tmp = 0;
 				for (int orients = 0; orients < orientations.length; orients++) {
-					
+					sumE = 0; sumO = 0;
 					sumOfAmplis = 0; meanPhase = 0; numerator = 0; 					
 					for (int scs = 0; scs < scales.length; scs++) {
-						sumOfAmplis += componentSO[orients][scs][0][y][x];
+						sumOfAmplis += absSO[orients][scs][y][x];
+						sumE += componentSO[orients][scs][0][y][x];
+						sumO += componentSO[orients][scs][1][y][x];
 						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
 						else Amax = Math.max(Amax,componentSO[orients][scs][0][y][x]);
-						meanPhase += componentSO[orients][scs][1][y][x];
+//						meanPhase += componentSO[orients][scs][1][y][x];
 						
 					}
-					weight = 1 + Math.exp(gainFactor*(cutoffValue-(1/scales.length)*(sumOfAmplis/(Amax+0.000000000001))));
-					meanPhase /= scales.length;
+					weight = 1 + Math.exp(gainFactor*(cutoffValue-((1/scales.length)*(sumOfAmplis/(Amax+0.000000000001)-1))));
+					//meanPhase /= scales.length;
 					denominator = sumOfAmplis;
 
+					double XE = Math.sqrt(sumE*sumE+sumO*sumO)+0.001;
+					double mE = sumE / XE;
+					double mO = sumO / XE;
+					phaseDevMeasure = 0;
 					for (int scs = 0; scs < scales.length; scs++) {
-						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
-								Math.abs(Math.sin(componentSO[orients][scs][1][y][x]-meanPhase));
-						tmp = componentSO[orients][scs][0][y][x]*phaseDevMeasure - threshold;
+						phaseDevMeasure += mE*componentSO[orients][scs][0][y][x] + mO*componentSO[orients][scs][1][y][x] - 
+								Math.abs(componentSO[orients][scs][0][y][x]*mO - componentSO[orients][scs][1][y][x]*mE);
+						
+//						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
+//								Math.abs(Math.sin(componentSO[orients][scs][1][y][x]-meanPhase));
+						tmp = /*componentSO[orients][scs][0][y][x]**/phaseDevMeasure - threshold;
 						if(tmp < 0) tmp = 0;
 						numerator += (tmp/weight);
 					}
@@ -245,7 +264,7 @@ public class Computations {
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
 					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
 					
-					Filter.phaseValues[y][x] += numerator/denominator;
+					//Filter.phaseValues[y][x] += numerator/denominator;
 					//phaseCongMatrix[y][x] += (numerator/denominator);
 				}
 			}
