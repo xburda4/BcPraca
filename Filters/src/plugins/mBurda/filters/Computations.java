@@ -9,8 +9,8 @@ import flanagan.math.FourierTransform;
 import icy.gui.dialog.MessageDialog;
 import icy.image.IcyBufferedImage;
 
-public class Computations {
-
+public class Computations {		
+	
 	/**
 	 * Returns real part of logGabor kernel in frequency domain
 	 * @param width of image
@@ -21,7 +21,7 @@ public class Computations {
 	 * */
 	public static double[][] getGaborKernel2D(int width, int height,
 			double wavelength, double angle,int numOfOrients) {
-		return getGaborKernel2D(width, height, wavelength, angle, 0.55, numOfOrients);
+		return getGaborKernel2D(width, height, wavelength, angle, 0.75, numOfOrients);
 	}
 
 	public static double[][] lowPassFilter(int width,int height,int radius){
@@ -75,12 +75,14 @@ public class Computations {
 //		long time = System.nanoTime();
 		for (int x = -(width / 2); x < (width / 2); x++) {
 			for (int y = -(height / 2); y < (height / 2); y++) {
-				double position = Math.sqrt((double)(x)/width * (double)(x)/width + (double)(y)/height * (double)(y)/height);
+				double position;
+				if(x != 0 && y != 0)position = Math.sqrt((double)(x)/width * (double)(x)/width + (double)(y)/height * (double)(y)/height);
+				else position = 1;
 				radialComp = Math
 						.exp(-(Math.log(position / centerFreq) * (Math
 								.log(position / centerFreq))) / (2 * ((Math
 								.log(sigmaOnf) * Math.log(sigmaOnf)))));
-				kernel2D[y + (height / 2)][x + (width / 2)] = radialComp;
+//				kernel2D[y + (height / 2)][x + (width / 2)] = radialComp;
 
 				theta = Math.atan2(-y/height, x/width);
 				ds = Math.sin(theta) * Math.cos(angle) - Math.cos(theta)
@@ -93,13 +95,11 @@ public class Computations {
 				
 				dtheta = Math.min(dtheta*numberOfOrients/2,Math.PI);
 				angulComp = (Math.cos(dtheta)+1)/2;
-				kernel2D[y + height / 2][x + width / 2] = kernel2D[y + height
-						/ 2][x + width / 2]
+				kernel2D[y + height / 2][x + width / 2] = radialComp
 						* angulComp;
 			}
 		}
-		//nastavenie DC komponenty na nulu, logGabor má nulu vždy
-		//kernel2D[height/2][width/2] = 0;
+		
 		
 //		time = System.nanoTime() - time;
 //		System.out.println("Kernel time is " + time + " ns");
@@ -184,7 +184,7 @@ public class Computations {
 		 * */
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
-		
+		double eps = 0.000000000001;
 		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
 		
 		double temp0,temp1;
@@ -198,6 +198,7 @@ public class Computations {
 			for (int scs = 0; scs < scales.length; scs++) {
 				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients],orientations.length);
 				componentSO[orients][scs] = InverseFourierTransform2D(createComplexMatrix(componentSO[orients][scs]),false);
+//				componentSO[orients][scs] = newInv(createComplexMatrix(componentSO[orients][scs]),false);
 				for(int y=0;y<componentSO[orients][scs][0].length;y++){
 					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
 						temp0 = componentSO[orients][scs][0][y][x];
@@ -217,7 +218,7 @@ public class Computations {
 //		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
 		
 		double sumE,sumO;
-		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,meanPhase,tmp;
+		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,tmp;
 		Matrix[][] phaseCongMatrix = new Matrix[ftImg.getNrow()][ftImg.getNcol()];
 		for (int y = 0; y < ftImg.getNrow(); y++) {
 			for (int x = 0; x < ftImg.getNcol(); x++) {
@@ -225,7 +226,7 @@ public class Computations {
 				tmp = 0;
 				for (int orients = 0; orients < orientations.length; orients++) {
 					sumE = 0; sumO = 0;
-					sumOfAmplis = 0; meanPhase = 0; numerator = 0; 					
+					sumOfAmplis = 0; numerator = 0; 					
 					for (int scs = 0; scs < scales.length; scs++) {
 						sumOfAmplis += absSO[orients][scs][y][x];
 						sumE += componentSO[orients][scs][0][y][x];
@@ -235,11 +236,11 @@ public class Computations {
 //						meanPhase += componentSO[orients][scs][1][y][x];
 						
 					}
-					weight = 1 + Math.exp(gainFactor*(cutoffValue-((1/scales.length)*(sumOfAmplis/(Amax+0.000000000001)-1))));
+					weight = 1 + Math.exp(gainFactor*(cutoffValue-((1/scales.length)*(sumOfAmplis/(Amax+eps)-1))));
 					//meanPhase /= scales.length;
 					denominator = sumOfAmplis;
 
-					double XE = Math.sqrt(sumE*sumE+sumO*sumO)+0.001;
+					double XE = Math.sqrt(sumE*sumE+sumO*sumO)+ eps;
 					double mE = sumE / XE;
 					double mO = sumO / XE;
 					phaseDevMeasure = 0;
@@ -253,7 +254,7 @@ public class Computations {
 						if(tmp < 0) tmp = 0;
 						numerator += (tmp/weight);
 					}
-					denominator += 0.000000000001;
+					denominator += eps;
 					
 					Matrix mat = new Matrix(2,2);
 					mat.set(0, 0, (Math.cos(orientations[orients])*Math.cos(orientations[orients])+1/2));
@@ -264,7 +265,7 @@ public class Computations {
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
 					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
 					
-					//Filter.phaseValues[y][x] += numerator/denominator;
+					Filter.phaseValues[y][x] += numerator/denominator;
 					//phaseCongMatrix[y][x] += (numerator/denominator);
 				}
 			}
@@ -284,6 +285,7 @@ public class Computations {
 				matrix[y][x] = img.getRaster().getSample(x, y, 0);
 			}
 		}
+//		return newFour(matrix,isAlt);
 		return FourierTransform2D(matrix,isAlt);
 	}
 	
