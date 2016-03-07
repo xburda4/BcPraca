@@ -63,7 +63,7 @@ public class Filters extends PluginActionable {
 //	}
 	}
 
-	public IcyBufferedImage makeImage2D(double[][] source){
+	public static IcyBufferedImage makeImage2D(double[][] source){
 		long start = System.nanoTime();
 		IcyBufferedImage ret = new IcyBufferedImage(source[0].length,source.length,IcyColorModel.createInstance(1, DataType.DOUBLE));
 		

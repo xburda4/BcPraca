@@ -84,7 +84,7 @@ public class CurvilinearStructures extends EzPlug {
 			ors = new double[tmp];
 		}
 		for(int i=0;i<ors.length;i++){
-			ors[i] = i*(180/ors.length)*(Math.PI/180);
+			ors[i] = (double)(i)/ors.length*Math.PI;
 		}
 		
 		if(vesselness.getValue()){
@@ -117,21 +117,21 @@ public class CurvilinearStructures extends EzPlug {
 		IcyBufferedImage in = getActiveImage();
 //		addSequence(new Sequence("FT Imag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),false))));
 //		addSequence(new Sequence("FT Real",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),true))));
-//		addSequence(new Sequence("Kernel_rozptyl0.85",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 3, 0,ors.length))));
+//		addSequence(new Sequence("Kernel",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 3, 0,4))));
 //		addSequence(new Sequence("Kernel_rozptyl0.55",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 13, 0,0.55,ors.length))));
 //		addSequence(new Sequence("Kernel_2",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 13.23, 0,ors.length))));
 //		addSequence(new Sequence("Kernel_3",Filters.makeImage2D(Computations.getGaborKernel2D(256, 256, 27.783, 0,ors.length))));
 //		addSequence(new Sequence("Kernel",Filters.makeImage2D(Computations.getGaborKernel2D(200, 200, 0.09, 0))));
 		
-//		double[][] kernel = (Computations.getGaborKernel2D(256, 256, 3, 0,4));
-//		double[][] lp = Computations.lowPassFilter(256, 256, 15);
+		double[][] kernel = (Computations.getGaborKernel2D(256, 256, 3, 0,4));
+		double[][] lp = Computations.lowPassFilter(256, 256, 15);
 		
-//		for(int y=0;y<kernel.length;y++)
-//			for(int x=0;x<kernel[y].length;x++)
-//			{
-//				kernel[y][x] = kernel[y][x] * lp[y][x];
-//			}
-//		addSequence(new Sequence("XY",Filters.makeImage2D(kernel)));
+		for(int y=0;y<kernel.length;y++)
+			for(int x=0;x<kernel[y].length;x++)
+			{
+				kernel[y][x] = kernel[y][x] * lp[y][x];
+			}
+		addSequence(new Sequence("XY",Filters.makeImage2D(kernel)));
 		
 //		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.07, 45)),false)[0])));
 //		addSequence(new Sequence("MultiReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 3, 0,4)),true))));
@@ -142,7 +142,7 @@ public class CurvilinearStructures extends EzPlug {
 //		//		
 //		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.FourierTransform2D(in,false),false)[0])));
 		
-		getPhase();
+//		getPhase();
 		}
 	/*
 	 * Metóda bude zmazaná,slúži na výpis fázových kongruencií

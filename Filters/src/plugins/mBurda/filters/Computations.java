@@ -76,15 +76,18 @@ public class Computations {
 		for (int x = -(width / 2); x < (width / 2); x++) {
 			for (int y = -(height / 2); y < (height / 2); y++) {
 				double position;
-				if(x != 0 && y != 0)position = Math.sqrt((double)(x)/width * (double)(x)/width + (double)(y)/height * (double)(y)/height);
-				else position = 1;
+				if(x != 0 || y != 0)position = Math.sqrt((double)(x)/width * (double)(x)/width + (double)(y)/height * (double)(y)/height);
+				//else position = 1;
+				else {
+					kernel2D[y][x] = 0;
+					continue;
+					}
 				radialComp = Math
 						.exp(-(Math.log(position / centerFreq) * (Math
 								.log(position / centerFreq))) / (2 * ((Math
 								.log(sigmaOnf) * Math.log(sigmaOnf)))));
-//				kernel2D[y + (height / 2)][x + (width / 2)] = radialComp;
 
-				theta = Math.atan2(-y/height, x/width);
+				theta = Math.atan2(-(double)(y)/height, (double)(x)/width);
 				ds = Math.sin(theta) * Math.cos(angle) - Math.cos(theta)
 						* Math.sin(angle);
 				dc = Math.cos(theta) * Math.cos(angle) + Math.sin(theta)
@@ -93,10 +96,10 @@ public class Computations {
 //				angulComp = Math.exp(-(dtheta * dtheta)
 //						/ (2 * (thetaSigma * thetaSigma)));
 				
-				dtheta = Math.min(dtheta*numberOfOrients/2,Math.PI);
-				angulComp = (Math.cos(dtheta)+1)/2;
-				kernel2D[y + height / 2][x + width / 2] = radialComp
-						* angulComp;
+				dtheta = Math.min(dtheta*numberOfOrients/2.0,Math.PI);
+				angulComp = (Math.cos(dtheta)+1)/2.0;
+				kernel2D[y + height / 2][x + width / 2] = radialComp *
+						 angulComp;
 			}
 		}
 		
