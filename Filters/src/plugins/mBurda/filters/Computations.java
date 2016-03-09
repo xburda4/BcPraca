@@ -156,7 +156,7 @@ public class Computations {
 				//možné použitie fcie getLogGaborKernel() pred cyklom
 				
 				tmp0 = ftImg.getElementCopy(y, x).getReal();
-				tmp1 = ftImg.getElementCopy(y, x).getImag();
+				tmp1 = -1*ftImg.getElementCopy(y, x).getImag();
 				
 				output[0][y][x] = tmp0 * logGabPoint * lp[y][x];
 				output[1][y][x] = tmp1 * logGabPoint * lp[y][x];
@@ -260,10 +260,10 @@ public class Computations {
 					denominator += eps;
 					
 					Matrix mat = new Matrix(2,2);
-					mat.set(0, 0, (Math.cos(orientations[orients])*Math.cos(orientations[orients])+1/2));
+					mat.set(0, 0, (Math.cos(orientations[orients])*Math.cos(orientations[orients])-1));
 					mat.set(0, 1, Math.cos(orientations[orients])*Math.sin(orientations[orients]));
 					mat.set(1, 0, mat.get(0, 1));
-					mat.set(1, 1, (Math.sin(orientations[orients])*Math.sin(orientations[orients]))+1/2);
+					mat.set(1, 1, (Math.sin(orientations[orients])*Math.sin(orientations[orients]))-1);
 					
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
 					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
