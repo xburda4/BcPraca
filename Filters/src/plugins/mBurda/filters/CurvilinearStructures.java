@@ -15,6 +15,7 @@ import javax.swing.GrayFilter;
 
 import org.jdesktop.swingx.image.GaussianBlurFilter;
 
+import flanagan.complex.ComplexMatrix;
 import icy.image.IcyBufferedImage;
 import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
@@ -59,7 +60,7 @@ public class CurvilinearStructures extends EzPlug {
 
 	@Override
 	protected void execute() {
-		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
+//		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
 //		BufferedImage img = (BufferedImage)getGrayScale(gauss.filter(getActiveImage(), null));
 		BufferedImage img = getActiveImage();//= gauss.filter(getActiveImage(), null);
 		double[] scs = {scaleKernels.getValue()};
@@ -74,7 +75,6 @@ public class CurvilinearStructures extends EzPlug {
 			scs[i] = 3* Math.pow(2.1,i);
 		}
 		
-		//double scs[] = {/*0.05,0.07,0.15,0.015,0.02,0.035*/0.003,0.005,0.01,0.008};
 		double[] ors = {angleKernels.getValue()};
 		{
 			int tmp = 2;
@@ -108,35 +108,55 @@ public class CurvilinearStructures extends EzPlug {
 			addSequence(new Sequence("Neuriteness with phase",neu.makeImageWithPhase2D()));
 		}
 		
+		
+//		double[][] x = {{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}};
+//		Computations.computeIFFT(Computations.computeFFT(x));
+//		ComplexMatrix x2 = Computations.FourierTransform2D(x, false);
+//		for(int i = 0;i<x2.getNcol();i++){
+//			for(int j = 0;j<x2.getNrow();j++){
+//				System.out.println("["+i+","+j+"]"+" Real: "+x2.getElementCopy(i, j).getReal()+" Imag:"+x2.getElementCopy(i, j).getImag());
+//			}
+//		}
 		/*
 		 * Toto všetko je tu len na testovanie a výpis medzivýpočtov
 		 * 
 		 * */
 //		double[][] inp = {{7,13,25,69},{854,1,444,32}};
 //		Computations.getThatFourier(inp);
+		
 		IcyBufferedImage in = getActiveImage();
-		addSequence(new Sequence("FTImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),false))));
-	
-//		double[][] kernel = (Computations.getGaborKernel2D(256, 256, 3, 0,4));
-//		double[][] lp = Computations.lowPassFilter(256, 256, 15);
+//		addSequence(new Sequence("FTImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),false))));
+//		addSequence(new Sequence("FTReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),true))));
+//		double[][] kernel = (Computations.getGaborKernel2D(256, 256, 6.3, 0,4));
+//		double[][] lp = Computations.lowPassFilter(256, 256);
 //		
 //		for(int y=0;y<kernel.length;y++)
 //			for(int x=0;x<kernel[y].length;x++)
 //			{
 //				kernel[y][x] = kernel[y][x] * lp[y][x];
 //			}
-//		addSequence(new Sequence("XY",Filters.makeImage2D(kernel)));
+//		addSequence(new Sequence("Kernel",Filters.makeImage2D(kernel)));
 		
 //		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 0.07, 45)),false)[0])));
-//		addSequence(new Sequence("MultiReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 3, 0,4)),true))));
-		addSequence(new Sequence("MultiImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 3, 0,4)),false))));
-
-//		addSequence(new Sequence("InversMultiReal",Filters.makeImage2D(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 3, 0, 4))))[0])));         
-		addSequence(new Sequence("InversMultiImag",Filters.makeImage2D(Computations.shiftArray(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 3, 0, 4))))[1]))));
+//		addSequence(new Sequence("MultiReal",Filters.makeImage2D(Computations.shiftArray(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 6.3, 0,4)),true)))));
+//		addSequence(new Sequence("MultiImag",Filters.makeImage2D(Computations.shiftArray(Computations.fttToDoubleArr2D(Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 6.3, 0,4)),false)))));
+//
+//		addSequence(new Sequence("InversMultiReal",Filters.makeImage2D(/*Computations.shiftArray*/(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 6.3, 0, 4))))[0]))));         
+//		addSequence(new Sequence("InversMultiImag",Filters.makeImage2D(/*Computations.shiftArray*/(Computations.InverseFourierTransform2D((Computations.createComplexMatrix(Computations.multiFTKernel(Computations.FourierTransform2D(in,false), 6.3, 0, 4))))[1]))));
 //		//		
 //		addSequence(new Sequence("InverseF",Filters.makeImage2D(Computations.InverseFourierTransform2D(Computations.FourierTransform2D(img,false))[0])));
 		
-		getPhase();
+		
+//		addSequence(new Sequence("gab*lp",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel0(Computations.FourierTransform2D(in, false), 6.3, 0, 4)))));
+//		addSequence(new Sequence("ftR",Filters.makeImage2D(/*Computations.shiftArray*/(Computations.multiFTKernel1(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[0]))));
+//		addSequence(new Sequence("ftI",Filters.makeImage2D(/*Computations.shiftArray*/(Computations.multiFTKernel1(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[1]))));
+//		addSequence(new Sequence("multiR",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel2(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[0]))));
+//		addSequence(new Sequence("multiI",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel2(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[1]))));
+
+		
+		
+		
+//		getPhase();
 		}
 	/*
 	 * Metóda bude zmazaná,slúži na výpis fázových kongruencií
