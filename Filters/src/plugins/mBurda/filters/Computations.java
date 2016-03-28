@@ -467,10 +467,10 @@ public class Computations {
 					.getTransformedDataAsComplex());
 			for (int x = 0; x < output.getNcol(); x++) {
 //				verzia spravená 26.3.
-				output.setElement(y, x, rowMatrix.getElementCopy(0, x));
+//				output.setElement(y, x, rowMatrix.getElementCopy(0, x));
 				
 //				verzia pred 26.3.
-//				output.setElement(y, /*x,rowMatrix.getElementCopy(0, x) );*/(x+output.getNcol()/2)%output.getNcol(), rowMatrix.getElementCopy(0, x));
+				output.setElement(y, /*x,rowMatrix.getElementCopy(0, x) );*/(x+output.getNcol()/2)%output.getNcol(), rowMatrix.getElementCopy(0, x));
 
 				
 //				output.setElement(y, x, output.getElementCopy(y, x).getReal(),output.getElementCopy(y, x).getImag());
@@ -488,10 +488,10 @@ public class Computations {
 					.getTransformedDataAsComplex());
 			for (int y = 0; y < output.getNrow(); y++) {
 //				verzia spravená 26.3.
-				output.setElement(y, x, rowMatrix.getElementCopy(0, y));
+//				output.setElement(y, x, rowMatrix.getElementCopy(0, y));
 				
 //				verzia pred 26.3.
-//				output.setElement(y, x, /*rowMatrix.getElementCopy(0, y));*/rowMatrix.getElementCopy(0, (y+rowMatrix.getNcol()/2)%rowMatrix.getNcol()));
+				output.setElement(y, x, /*rowMatrix.getElementCopy(0, y));*/rowMatrix.getElementCopy(0, (y+rowMatrix.getNcol()/2)%rowMatrix.getNcol()));
 				
 				
 				//output.setElement(y, x, output.getElementCopy(y, x).getReal(),output.getElementCopy(y, x).getImag()*(-1));
@@ -579,10 +579,10 @@ public class Computations {
 			for (int x = 0; x < input.getNcol(); x++) {
 				//pozor na zbytočný kód	
 				//26.3.
-				number = input.getElementCopy(y, x);
+//				number = input.getElementCopy(y, x);
 				
 //				verzia pred 26.3.
-//				number = input.getElementCopy(y, /*x);*/(x+input.getNcol()/2)%input.getNcol());
+				number = input.getElementCopy(y, /*x);*/(x+input.getNcol()/2)%input.getNcol());
 					
 					
 				//number.setImag(number.getImag()*(-1));
@@ -605,10 +605,10 @@ public class Computations {
 		for (int x = 0; x < input.getNcol(); x++) {
 			for (int y = 0; y < input.getNrow(); y++) {
 //				verzia spravená 26.3.
-				number = input.getElementCopy(y, x);
+//				number = input.getElementCopy(y, x);
 				
 //				verzia pred 26.3.
-//				number = input.getElementCopy((y+input.getNrow()/2)%input.getNrow(), x);
+				number = input.getElementCopy((y+input.getNrow()/2)%input.getNrow(), x);
 
 				
 //				number.setImag(number.getImag()*(-1));
