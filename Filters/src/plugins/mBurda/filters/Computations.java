@@ -58,7 +58,7 @@ public class Computations {
 				tmp0 = ftImg.getElementCopy(y, x).getReal();
 				tmp1 = ftImg.getElementCopy(y, x).getImag();
 				
-				output[y][x] = kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
+				output[y][x] = kernel[y][x] * lp[y][x];
 			}
 		}
 		return output;
@@ -89,21 +89,14 @@ public class Computations {
 	
 	public static double[][][] multiFTKernel2(ComplexMatrix ftImg,double scale,double angle,int numberOfOrients) {
 		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
-//		double logGabPoint;
-		
-		final double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle,numberOfOrients);
-		
-		double tmp0=0,tmp1=0;
-		final double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow());
+		double logGabPoint;
 		for(int y=0;y<ftImg.getNrow();y++){
 			for(int x=0;x<ftImg.getNcol();x++){
+				logGabPoint = getLogGaborKernelPoint(x, y, ftImg.getNcol(), ftImg.getNrow(), scale, angle+Math.PI, numberOfOrients, 0.75)*
+						lowPassFilterPoint(x, y, ftImg.getNcol(), ftImg.getNrow());
 				
-//				logGabPoint = kernel[/*ftImg.getNrow()-1-*/y][/*ftImg.getNcol()-1-*/x];
-				//logGabPoint = getLogGaborKernelPoint(x - ftImg.getNcol()/2,y - ftImg.getNrow()/2, scale, angle,0.75);
-				//možné použitie fcie getLogGaborKernel() pred cyklom
-				
-				output[0][y][x] = ftImg.getElementCopy(y, x).getReal() * kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
-				output[1][y][x] = ftImg.getElementCopy(y, x).getImag() * kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
+				output[0][y][x] = ftImg.getElementCopy(y, x).getReal() * logGabPoint;
+				output[1][y][x] = ftImg.getElementCopy(y, x).getImag() * logGabPoint;
 			}
 		}
 		return output;
@@ -151,10 +144,16 @@ public class Computations {
 		for(int y= -(height/2);y<height/2;y++){
 			for(int x = -(width/2);x<width/2;x++){
 				//lowpass[y + (height/2)][x + (width/2)] = Math.sqrt(x*x+y*y) < radius ? 1 : 0 ;
-				lowpass[y + (height/2)][x + (width/2)] = 1.0/ (1+Math.pow((Math.sqrt(x*x+y*y)/(0.45*width)),30));
+				lowpass[y + (height/2)][x + (width/2)] = 1.0/ (1+Math.pow((Math.sqrt(x*x+y*y)/(0.45*Math.min(width,height))),30));
 			}
 		}
 		return lowpass;
+	}
+	
+	public static double lowPassFilterPoint(int x,int y,int width,int height){
+		x = x-width/2;
+		y = y-height/2;
+		return 1.0/(1+Math.pow((Math.sqrt(x*x+y*y)/(0.45*Math.min(width,height))),30));
 	}
 	
 	public static double[][] highPassFilter(int width,int height,int radius){
@@ -239,21 +238,27 @@ public class Computations {
 	 * @param angle of signal 
 	 * @return value of logGabor kernel at given coordinates
 	 * */
-	public static double getLogGaborKernelPoint(int x, int y, double scale,
-			double orientation,double sigmaOnf) {
+	public static double getLogGaborKernelPoint(int x, int y,int width,int height, double scale,
+			double orientation,int numberOfOrients,double sigmaOnf) {
+		x = x - width/2;
+		y = y - height/2;
+		if(x==0 && y ==0) return 0;
+		double position = Math.sqrt((double)(x)/width * (double)(x)/width + (double)(y)/height * (double)(y)/height);
 		double pointValue = Math
-				.exp((-(Math.log(Math.sqrt(x * x + y * y) / (1/scale)) * (Math
-						.log(Math.sqrt(x * x + y * y) / (1/scale)))) / (2 * ((Math
+				.exp((-(Math.log(position / (1/scale)) * (Math
+						.log(position / (1/scale)))) / (2 * ((Math
 						.log(sigmaOnf) * Math.log(sigmaOnf))))));
 
-		double theta = Math.atan2(-y, x);
+		double theta = Math.atan2(-(double)(y)/height, (double)(x)/width);
 		double ds = Math.sin(theta) * Math.cos(orientation) - Math.cos(theta)
 				* Math.sin(orientation);
 		double dc = Math.cos(theta) * Math.cos(orientation) + Math.sin(theta)
 				* Math.sin(orientation);
 		double dtheta = Math.abs(Math.atan2(ds, dc));
-		pointValue *= Math.exp(-(dtheta * dtheta) / (2 * (0.75 * 0.75)));
+		dtheta = Math.min(dtheta*numberOfOrients/2.0,Math.PI);
+		pointValue *= (Math.cos(dtheta)+1)/2.0;
 		return pointValue;
+		
 	}
 
 	/**
@@ -267,7 +272,7 @@ public class Computations {
 		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
 //		double logGabPoint;
 		
-		final double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle,numberOfOrients);
+		final double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle+Math.PI,numberOfOrients);
 		
 		final double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow());
 		for(int y=0;y<ftImg.getNrow();y++){
@@ -278,8 +283,8 @@ public class Computations {
 				//možné použitie fcie getLogGaborKernel() pred cyklom
 				
 			
-				output[0][y][x] = ftImg.getElementCopy(y, x).getReal() * kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
-				output[1][y][x] = ftImg.getElementCopy(y, x).getImag() * kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
+				output[0][y][x] = ftImg.getElementCopy(y, x).getReal() * kernel[y][x] * lp[y][x];
+				output[1][y][x] = ftImg.getElementCopy(y, x).getImag() * kernel[y][x] * lp[y][x];
 			}
 		}
 		return output;
@@ -356,8 +361,8 @@ public class Computations {
 						sumOfAmplis += absSO[orients][scs][y][x];
 						sumE += componentSO[orients][scs][0][y][x];
 						sumO += componentSO[orients][scs][1][y][x];
-						if(scs == 0) Amax = componentSO[orients][scs][0][y][x];
-						else Amax = Math.max(Amax,componentSO[orients][scs][0][y][x]);
+						if(scs == 0) Amax = absSO[orients][scs][y][x];//componentSO[orients][scs][0][y][x];
+						else Amax = Math.max(Amax,absSO[orients][scs][y][x]/*componentSO[orients][scs][0][y][x]*/);
 //						meanPhase += componentSO[orients][scs][1][y][x];
 						
 					}
