@@ -368,7 +368,7 @@ public class Computations {
 					}
 					weight = 1 + Math.exp(gainFactor*(cutoffValue-((1/scales.length)*(sumOfAmplis/(Amax+eps)-1))));
 					//meanPhase /= scales.length;
-					denominator = sumOfAmplis;
+					
 
 					double XE = Math.sqrt(sumE*sumE+sumO*sumO)+ eps;
 					double mE = sumE / XE;
@@ -380,11 +380,12 @@ public class Computations {
 						
 //						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
 //								Math.abs(Math.sin(componentSO[orients][scs][1][y][x]-meanPhase));
-						tmp = /*componentSO[orients][scs][0][y][x]**/phaseDevMeasure - threshold;
-						if(tmp < 0) tmp = 0;
-						numerator += (tmp/weight);
+						
 					}
-					denominator += eps;
+					denominator = sumOfAmplis+eps;
+					tmp = phaseDevMeasure - threshold;
+					if(tmp < 0) tmp = 0;
+					numerator += (tmp/weight);
 					
 					Matrix mat = new Matrix(2,2);
 					mat.set(0, 0, (Math.cos(orientations[orients])*Math.cos(orientations[orients])-1));
