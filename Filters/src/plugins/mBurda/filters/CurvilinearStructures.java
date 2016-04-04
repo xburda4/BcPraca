@@ -124,7 +124,7 @@ public class CurvilinearStructures extends EzPlug {
 //		double[][] inp = {{7,13,25,69},{854,1,444,32}};
 //		Computations.getThatFourier(inp);
 		
-		IcyBufferedImage in = getActiveImage();
+//		IcyBufferedImage in = getActiveImage();
 //		addSequence(new Sequence("FTImag",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),false))));
 //		addSequence(new Sequence("FTReal",Filters.makeImage2D(Computations.fttToDoubleArr2D(Computations.FourierTransform2D(in,false),true))));
 //		double[][] kernel = new double[256][256];// = (Computations.getGaborKernel2D(256, 256, 6.3, 0,4));
@@ -150,7 +150,7 @@ public class CurvilinearStructures extends EzPlug {
 //		addSequence(new Sequence("gab*lp",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel0(Computations.FourierTransform2D(in, false), 6.3, 0, 4)))));
 //		addSequence(new Sequence("ftR",Filters.makeImage2D(/*Computations.shiftArray*/(Computations.multiFTKernel1(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[0]))));
 //		addSequence(new Sequence("ftI",Filters.makeImage2D(/*Computations.shiftArray*/(Computations.multiFTKernel1(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[1]))));
-		addSequence(new Sequence("multiR",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel2(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[0]))));
+//		addSequence(new Sequence("multiR",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel2(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[0]))));
 //		addSequence(new Sequence("multiI",Filters.makeImage2D(Computations.shiftArray(Computations.multiFTKernel2(Computations.FourierTransform2D(in, false), 6.3, 0, 4)[1]))));
 
 		

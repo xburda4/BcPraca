@@ -327,8 +327,6 @@ public class Computations {
 				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients],orientations.length);
 				componentSO[orients][scs] = InverseFourierTransform2D(createComplexMatrix(componentSO[orients][scs]));
 //				componentSO[orients][scs] = newInv(createComplexMatrix(componentSO[orients][scs]),false);
-				//componentSO[orients][scs][1] = shiftArray(componentSO[orients][scs][1]);
-				//componentSO[orients][scs][0] = shiftArray(componentSO[orients][scs][0]);
 				for(int y=0;y<componentSO[orients][scs][0].length;y++){
 					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
 						temp0 = componentSO[orients][scs][0][y][x];
@@ -344,15 +342,11 @@ public class Computations {
 			}
 		}
 		
-		
-//		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
-		
 		double sumE,sumO;
 		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,tmp;
 		Matrix[][] phaseCongMatrix = new Matrix[ftImg.getNrow()][ftImg.getNcol()];
 		for (int y = 0; y < ftImg.getNrow(); y++) {
 			for (int x = 0; x < ftImg.getNcol(); x++) {
-				//phaseCongMatrix[y][x] = new Matrix(2,2);
 				tmp = 0;
 				for (int orients = 0; orients < orientations.length; orients++) {
 					sumE = 0; sumO = 0;
@@ -366,7 +360,7 @@ public class Computations {
 //						meanPhase += componentSO[orients][scs][1][y][x];
 						
 					}
-					weight = 1 + Math.exp(gainFactor*(cutoffValue-((1/scales.length)*(sumOfAmplis/(Amax+eps)-1))));
+					weight = 1 + Math.exp(gainFactor*(cutoffValue-((sumOfAmplis/(Amax+eps)-1)/scales.length)));
 					//meanPhase /= scales.length;
 					
 
@@ -383,10 +377,13 @@ public class Computations {
 						
 					}
 					denominator = sumOfAmplis+eps;
+					
 					tmp = phaseDevMeasure - threshold;
 					if(tmp < 0) tmp = 0;
 					numerator += (tmp/weight);
 					
+					
+						
 					Matrix mat = new Matrix(2,2);
 					mat.set(0, 0, (Math.cos(orientations[orients])*Math.cos(orientations[orients])-1));
 					mat.set(0, 1, Math.cos(orientations[orients])*Math.sin(orientations[orients]));
@@ -394,7 +391,7 @@ public class Computations {
 					mat.set(1, 1, (Math.sin(orientations[orients])*Math.sin(orientations[orients]))-1);
 					
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
-					else phaseCongMatrix[y][x].plus(mat.times(numerator/denominator));
+					else phaseCongMatrix[y][x].plusEquals(mat.times(numerator/denominator));
 					
 					Filter.phaseValues[y][x] += numerator/denominator;
 					
