@@ -46,7 +46,7 @@ public class Vesselness2D extends Filter{
 	 */
 	private double computeVesselnessWithPhaseForPoint(int x,int y){
 		double[] eigens = getEigenValuesWithPhase(x,y);
-		return computeVesselness(eigens);//eigens[1];
+		return computeVesselness(eigens);
 		/*
 		if(eigens[1] < 0) return 0;
 		else return computeVesselness(eigens);

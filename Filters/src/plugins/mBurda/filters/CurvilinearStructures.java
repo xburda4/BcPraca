@@ -29,18 +29,18 @@ public class CurvilinearStructures extends EzPlug {
 	
 	
 	EzVarInteger blur = new EzVarInteger("Radius of blur",1,0,10,1);
-	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",false);
-	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",false);
+	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",true);
+	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",true);
 	EzVarDouble betaThreshold =new EzVarDouble("Disparsity control",0,-50,50,0.05);
 	EzVarDouble gammaThreshold = new EzVarDouble("Relative brightness control",0,-30,30,0.02);
 //	EzVarDouble alphaSteer = new EzVarDouble("Steerable filter equivalent",0,-50,50,0.05);
-	EzVarDouble cutoffValue = new EzVarDouble("Cutoff value",0,-100,100,1);
+	EzVarDouble cutoffValue = new EzVarDouble("Cutoff value",0,-100,100,0.05);
 	EzVarDouble threshold = new EzVarDouble("Threshold",0,-100,100,1);
-	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,0.05);
-	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",false);
-	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",false);
+	EzVarDouble gainFactor = new EzVarDouble("Gain factor",0,-50,50,1);
+	EzVarBoolean vesPhase = new EzVarBoolean("Compute vesselness with phase congruency?",true);
+	EzVarBoolean neuPhase = new EzVarBoolean("Compute neuriteness with phase congruency?",true);
 	EzVarInteger angleKernels = new EzVarInteger("Number of kernels for angle computation.",2,2,8,2);
-	EzVarInteger scaleKernels = new EzVarInteger("Number of kernels for scale computation.",1,1,4,1);
+	EzVarInteger scaleKernels = new EzVarInteger("Number of kernels for scale computation.",1,1,8,1);
 	
 	EzGroup vesGroup = new EzGroup("Vesselness",betaThreshold,gammaThreshold);
 //	EzGroup neuGroup = new EzGroup("Neuriteness",alphaSteer);
@@ -60,6 +60,8 @@ public class CurvilinearStructures extends EzPlug {
 
 	@Override
 	protected void execute() {
+		ves = null;
+		neu = null;
 //		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
 //		BufferedImage img = (BufferedImage)getGrayScale(gauss.filter(getActiveImage(), null));
 		BufferedImage img = getActiveImage();//= gauss.filter(getActiveImage(), null);
@@ -94,7 +96,7 @@ public class CurvilinearStructures extends EzPlug {
 		if(vesPhase.getValue()){
 			if(ves == null) ves = new Vesselness2D(img, betaThreshold.getValue(), gammaThreshold.getValue());
 			Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source,false), 
-					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
+					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue(),img.getWidth(),img.getHeight());
 			addSequence(new Sequence("Vesselness with phase congurency",ves.makeImageWithPhase2D()));
 		}
 		if(neuriteness.getValue()){
@@ -104,19 +106,10 @@ public class CurvilinearStructures extends EzPlug {
 		if(neuPhase.getValue()){
 			if(neu == null) neu = new Neuriteness2D(img, -1/3);
 			if(!vesPhase.getValue()) Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source,true), 
-					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue());
+					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue(),img.getWidth(),img.getHeight());
 			addSequence(new Sequence("Neuriteness with phase",neu.makeImageWithPhase2D()));
 		}
 		
-		
-//		double[][] x = {{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}};
-//		Computations.computeIFFT(Computations.computeFFT(x));
-//		ComplexMatrix x2 = Computations.FourierTransform2D(x, false);
-//		for(int i = 0;i<x2.getNcol();i++){
-//			for(int j = 0;j<x2.getNrow();j++){
-//				System.out.println("["+i+","+j+"]"+" Real: "+x2.getElementCopy(i, j).getReal()+" Imag:"+x2.getElementCopy(i, j).getImag());
-//			}
-//		}
 		/*
 		 * Toto všetko je tu len na testovanie a výpis medzivýpočtov
 		 * 
@@ -156,22 +149,22 @@ public class CurvilinearStructures extends EzPlug {
 		
 		
 		
-		getPhase();
+//		getPhase();
 		}
 	/*
 	 * Metóda bude zmazaná,slúži na výpis fázových kongruencií
 	 * */
-	private void getPhase(){
-		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseValues.length, Filter.phaseValues[0].length, IcyColorModel.createInstance(1, DataType.DOUBLE));
-		ret.beginUpdate();
-		for(int y=0;y<Filter.phaseValues.length;y++){
-			for(int x=0;x<Filter.phaseValues[y].length;x++){
-				ret.setData(x, y, 0, Filter.phaseValues[y][x]);
-			}
-		}
-		ret.endUpdate();
-		addSequence(new Sequence("Phase congruency",ret));
-	}
+//	private void getPhase(){
+//		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseValues.length, Filter.phaseValues[0].length, IcyColorModel.createInstance(1, DataType.DOUBLE));
+//		ret.beginUpdate();
+//		for(int y=0;y<Filter.phaseValues.length;y++){
+//			for(int x=0;x<Filter.phaseValues[y].length;x++){
+//				ret.setData(x, y, 0, Filter.phaseValues[y][x]);
+//			}
+//		}
+//		ret.endUpdate();
+//		addSequence(new Sequence("Phase congruency",ret));
+//	}
 //	private IcyBufferedImage getImage(){
 ////		IcyBufferedImage ret = new IcyBufferedImage(Filter.phaseCong[0].length, Filter.phaseCong.length, IcyColorModel.createInstance(1, DataType.DOUBLE));
 //		IcyBufferedImage ret = new IcyBufferedImage(200, 200, IcyColorModel.createInstance(1, DataType.DOUBLE));

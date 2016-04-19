@@ -8,122 +8,8 @@ import flanagan.complex.ComplexMatrix;
 import flanagan.math.FourierTransform;
 import icy.gui.dialog.MessageDialog;
 import icy.image.IcyBufferedImage;
-import icy.sequence.Sequence;
 
 public class Computations {		
-	/**
-	 * Kontrola -> Výpočet fft
-	 */
-	public static Complex[] computeFFT(double[] input){
-		FourierTransform four = new FourierTransform(input);
-		four.transform();
-		System.out.println("Hodnoty Fourierovej transformácie");
-		for(int x = 0;x<four.getTransformedDataAsComplex().length;x++){
-			System.out.print(four.getTransformedDataAsComplex()[x].getReal());
-			System.out.println(" + "+four.getTransformedDataAsComplex()[x].getImag()+"i");
-		}
-		return four.getTransformedDataAsComplex();
-	}
-	public static void computeIFFT(Complex[] input){
-		Complex tmp;
-		for(int x=0;x<input.length/2;x++){
-			tmp = input[x];
-			input[x] = input[input.length-x-1];
-			input[input.length-x-1] = tmp;
-		}
-		FourierTransform four = new FourierTransform(input);
-		four.inverse();
-		System.out.println("Hodnoty Inverznej FFT");
-		for(int x = 0;x<four.getTransformedDataAsComplex().length;x++){
-			System.out.print(four.getTransformedDataAsComplex()[x].getReal());
-			System.out.println(" + "+four.getTransformedDataAsComplex()[x].getImag()+"i");
-		}
-	}
-	
-	public static double[][] multiFTKernel0(ComplexMatrix ftImg,double scale,double angle,int numberOfOrients) {
-		double[][] output = new double[ftImg.getNrow()][ftImg.getNcol()];
-//		double logGabPoint;
-		
-		final double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle,numberOfOrients);
-		
-		double tmp0=0,tmp1=0;
-		final double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow());
-		for(int y=0;y<ftImg.getNrow();y++){
-			for(int x=0;x<ftImg.getNcol();x++){
-				
-//				logGabPoint = kernel[/*ftImg.getNrow()-1-*/y][/*ftImg.getNcol()-1-*/x];
-				//logGabPoint = getLogGaborKernelPoint(x - ftImg.getNcol()/2,y - ftImg.getNrow()/2, scale, angle,0.75);
-				//možné použitie fcie getLogGaborKernel() pred cyklom
-				
-				tmp0 = ftImg.getElementCopy(y, x).getReal();
-				tmp1 = ftImg.getElementCopy(y, x).getImag();
-				
-				output[y][x] = kernel[y][x] * lp[y][x];
-			}
-		}
-		return output;
-	}
-	
-	public static double[][][] multiFTKernel1(ComplexMatrix ftImg,double scale,double angle,int numberOfOrients) {
-		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
-//		double logGabPoint;
-		
-//		final double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle,numberOfOrients);
-		
-		
-//		final double[][] lp = lowPassFilter(ftImg.getNcol(),ftImg.getNrow());
-		for(int y=0;y<ftImg.getNrow();y++){
-			for(int x=0;x<ftImg.getNcol();x++){
-				
-//				logGabPoint = kernel[/*ftImg.getNrow()-1-*/y][/*ftImg.getNcol()-1-*/x];
-				//logGabPoint = getLogGaborKernelPoint(x - ftImg.getNcol()/2,y - ftImg.getNrow()/2, scale, angle,0.75);
-				//možné použitie fcie getLogGaborKernel() pred cyklom
-				
-				
-				output[0][y][x] = ftImg.getElementCopy(y, x).getReal();// * kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
-				output[1][y][x] = ftImg.getElementCopy(y, x).getImag();// * kernel[ftImg.getNrow()-1-y][ftImg.getNcol()-1-x] * lp[y][x];
-			}
-		}
-		return output;
-	}
-	
-	public static double[][][] multiFTKernel2(ComplexMatrix ftImg,double scale,double angle,int numberOfOrients) {
-		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
-		double logGabPoint;
-		for(int y=0;y<ftImg.getNrow();y++){
-			for(int x=0;x<ftImg.getNcol();x++){
-				logGabPoint = getLogGaborKernelPoint(x, y, ftImg.getNcol(), ftImg.getNrow(), scale, angle+Math.PI, numberOfOrients, 0.75)*
-						lowPassFilterPoint(x, y, ftImg.getNcol(), ftImg.getNrow());
-				
-				output[0][y][x] = ftImg.getElementCopy(y, x).getReal() * logGabPoint;
-				output[1][y][x] = ftImg.getElementCopy(y, x).getImag() * logGabPoint;
-			}
-		}
-		return output;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	/**
@@ -143,7 +29,6 @@ public class Computations {
 		double[][] lowpass = new double[height][width];
 		for(int y= -(height/2);y<height/2;y++){
 			for(int x = -(width/2);x<width/2;x++){
-				//lowpass[y + (height/2)][x + (width/2)] = Math.sqrt(x*x+y*y) < radius ? 1 : 0 ;
 				lowpass[y + (height/2)][x + (width/2)] = 1.0/ (1+Math.pow((Math.sqrt(x*x+y*y)/(0.45*Math.min(width,height))),30));
 			}
 		}
@@ -270,7 +155,6 @@ public class Computations {
 	 * */
 	public static double[][][] multiFTKernel(ComplexMatrix ftImg,double scale,double angle,int numberOfOrients) {
 		double[][][] output = new double[2][ftImg.getNrow()][ftImg.getNcol()];
-//		double logGabPoint;
 		
 		final double[][] kernel = getGaborKernel2D(ftImg.getNcol(), ftImg.getNrow(), scale, angle+Math.PI,numberOfOrients);
 		
@@ -302,7 +186,7 @@ public class Computations {
 	 */
 	public static Matrix[][] getPhaseCong(ComplexMatrix ftImg, double[] scales,
 			double[] orientations, double threshold, double cutoffValue,
-			double gainFactor) {
+			double gainFactor,int width,int height) {
 		if(ftImg == null || scales == null || orientations == null) {
 			MessageDialog.showDialog("Incorrect argument");
 			return null;
@@ -313,30 +197,23 @@ public class Computations {
 		double[][][][][] componentSO = new double[orientations.length][scales.length][2][ftImg
 				.getNrow()][ftImg.getNcol()];
 		double eps = 0.000000000001;
-		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
+//		Filter.phaseValues = new double[ftImg.getNrow()][ftImg.getNcol()];
 		
 		double temp0,temp1;
-		/*
-		 * Test
-		 * */
 		
-		double[][][][] absSO= new double[orientations.length][scales.length][ftImg.getNrow()][ftImg.getNcol()];
+		double[][][][] absSO= new double[orientations.length][scales.length][/*ftImg.getNrow()*/height][/*ftImg.getNcol()*/width];
 		
 		for (int orients = 0; orients < orientations.length; orients++) {
 			for (int scs = 0; scs < scales.length; scs++) {
-				componentSO[orients][scs] = multiFTKernel(ftImg, scales[scs], orientations[orients],orientations.length);
-				componentSO[orients][scs] = InverseFourierTransform2D(createComplexMatrix(componentSO[orients][scs]));
-//				componentSO[orients][scs] = newInv(createComplexMatrix(componentSO[orients][scs]),false);
-				for(int y=0;y<componentSO[orients][scs][0].length;y++){
-					for(int x=0;x<componentSO[orients][scs][0][y].length;x++){
+				componentSO[orients][scs] = InverseFourierTransform2D(createComplexMatrix(multiFTKernel(ftImg, scales[scs], orientations[orients],orientations.length)));
+
+				for(int y=0;y<height/*componentSO[orients][scs][0].length*/;y++){
+					for(int x=0;x<width/*componentSO[orients][scs][0][y].length*/;x++){
 						temp0 = componentSO[orients][scs][0][y][x];
 						temp1 = componentSO[orients][scs][1][y][x];
 						
 						
 						absSO[orients][scs][y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
-//						componentSO[orients][scs][0][y][x] = Math.sqrt((temp0*temp0)+(temp1*temp1));
-//						if(orients ==0 && scs ==0)Filter.phaseValues[y][x] = componentSO[0][0][0][y][x];
-//						componentSO[orients][scs][1][y][x] = Math.atan2(temp1,temp0);
 						}
 					}
 			}
@@ -345,12 +222,12 @@ public class Computations {
 		double sumE,sumO;
 		double denominator,numerator,weight,phaseDevMeasure,Amax=0,sumOfAmplis,tmp;
 		Matrix[][] phaseCongMatrix = new Matrix[ftImg.getNrow()][ftImg.getNcol()];
-		for (int y = 0; y < ftImg.getNrow(); y++) {
-			for (int x = 0; x < ftImg.getNcol(); x++) {
+		for (int y = 0; y < height/*ftImg.getNrow()*/; y++) {
+			for (int x = 0; x < /*ftImg.getNcol()*/width; x++) {
 				tmp = 0;
 				for (int orients = 0; orients < orientations.length; orients++) {
 					sumE = 0; sumO = 0;
-					sumOfAmplis = 0; numerator = 0; 					
+					sumOfAmplis = 0;					
 					for (int scs = 0; scs < scales.length; scs++) {
 						sumOfAmplis += absSO[orients][scs][y][x];
 						sumE += componentSO[orients][scs][0][y][x];
@@ -360,7 +237,7 @@ public class Computations {
 //						meanPhase += componentSO[orients][scs][1][y][x];
 						
 					}
-					weight = 1 + Math.exp(gainFactor*(cutoffValue-((sumOfAmplis/(Amax+eps)-1)/scales.length)));
+					
 					//meanPhase /= scales.length;
 					
 
@@ -371,16 +248,12 @@ public class Computations {
 					for (int scs = 0; scs < scales.length; scs++) {
 						phaseDevMeasure += mE*componentSO[orients][scs][0][y][x] + mO*componentSO[orients][scs][1][y][x] - 
 								Math.abs(componentSO[orients][scs][0][y][x]*mO - componentSO[orients][scs][1][y][x]*mE);
-						
-//						phaseDevMeasure = Math.cos(componentSO[orients][scs][1][y][x]-meanPhase)-
-//								Math.abs(Math.sin(componentSO[orients][scs][1][y][x]-meanPhase));
-						
 					}
 					denominator = sumOfAmplis+eps;
+					weight = 1D/(1 + Math.exp(gainFactor*(cutoffValue-((sumOfAmplis/(Amax+eps)-1)/scales.length))));
 					
-					tmp = phaseDevMeasure - threshold;
-					if(tmp < 0) tmp = 0;
-					numerator += (tmp/weight);
+					tmp = Math.max(phaseDevMeasure - threshold,0);
+					numerator = tmp*weight;
 					
 					
 						
@@ -392,8 +265,6 @@ public class Computations {
 					
 					if(phaseCongMatrix[y][x] == null) phaseCongMatrix[y][x] = mat.times(numerator/denominator);
 					else phaseCongMatrix[y][x].plusEquals(mat.times(numerator/denominator));
-					
-					Filter.phaseValues[y][x] += numerator/denominator;
 					
 				}
 			}
@@ -513,31 +384,6 @@ public class Computations {
 		}
 		return output;
 	}
-
-	public static void getThatFourier(double[][] array){
-		FourierTransform ft;
-		ComplexMatrix complex = new ComplexMatrix(2, 4);
-		for(int j = 0;j<2;j++){
-			ft = new FourierTransform(array[j]);
-			ft.transform();
-			for(int i = 0;i<ft.getTransformedDataAsComplex().length;i++){
-				complex.setElement(j, i, ft.getTransformedDataAsComplex()[i]);
-//				System.out.println(j+":Real:"+ft.getTransformedDataAsComplex()[i].getReal() + " Imag:"+ft.getTransformedDataAsComplex()[i].getImag());
-			}
-		}
-		Complex[] tmpRow = new Complex[2];
-		for(int j = 0;j<4;j++){
-			for(int i = 0;i<2;i++){
-				tmpRow[i] = complex.getElementCopy(i, j);
-			}
-			ft = new FourierTransform(tmpRow);
-			ft.transform();
-			for(int i = 0;i<2;i++){
-				complex.setElement(i, j, ft.getTransformedDataAsComplex()[i]);
-//				System.out.println(j+":Real:"+ft.getTransformedDataAsComplex()[i].getReal() + " Imag:"+ft.getTransformedDataAsComplex()[i].getImag());
-			}
-		}
-	}
 	
 	/**
 	 * Creates double array from complex matrix
@@ -581,16 +427,7 @@ public class Computations {
 		for (int y = 0; y < input.getNrow(); y++) {
 			for (int x = 0; x < input.getNcol(); x++) {
 				//pozor na zbytočný kód	
-				//26.3.
-//				number = input.getElementCopy(y, x);
-				
-//				verzia pred 26.3.
-				number = input.getElementCopy(y, /*x);*/(x+input.getNcol()/2)%input.getNcol());
-					
-					
-				//number.setImag(number.getImag()*(-1));
-					
-					
+				number = input.getElementCopy(y, /*x);*/(x+input.getNcol()/2)%input.getNcol());			
 				tmpRow[x] = number;
 				
 			}
@@ -607,16 +444,7 @@ public class Computations {
 		// výpočet FFT nad stĺpcami
 		for (int x = 0; x < input.getNcol(); x++) {
 			for (int y = 0; y < input.getNrow(); y++) {
-//				verzia spravená 26.3.
-//				number = input.getElementCopy(y, x);
-				
-//				verzia pred 26.3.
-				number = input.getElementCopy((y+input.getNrow()/2)%input.getNrow(), x);
-
-				
-//				number.setImag(number.getImag()*(-1));
-				tmpRow[y] = number;
-				//tmpRow[y] = input.getElementCopy(y, x);
+				tmpRow[y] =	input.getElementCopy((y+input.getNrow()/2)%input.getNrow(), x);
 				
 			}
 			FourierTransform fourierHorizontal = new FourierTransform(tmpRow);

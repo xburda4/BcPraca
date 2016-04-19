@@ -8,7 +8,7 @@ import icy.image.IcyBufferedImage;
 public abstract class Filter {
 	protected static IcyBufferedImage source;
 	protected static Matrix[][] phaseCong;
-	public static double[][] phaseValues;
+//	public static double[][] phaseValues;
 	/**
 	 * Computes eigenvalues of image at point (x,y)
 	 * @param x x-coordinate
