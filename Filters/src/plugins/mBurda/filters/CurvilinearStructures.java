@@ -1,25 +1,27 @@
 package plugins.mBurda.filters;
 
 //import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Toolkit;
+//import java.awt.Image;
+//import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.awt.image.ImageProducer;
-import java.io.File;
-import java.io.IOException;
+//import java.awt.image.FilteredImageSource;
+//import java.awt.image.ImageFilter;
+//import java.awt.image.ImageProducer;
+//import java.io.File;
+//import java.io.IOException;
 
-import javax.imageio.ImageIO;
-import javax.swing.GrayFilter;
+//import javax.imageio.ImageIO;
+//import javax.swing.GrayFilter;
 
-import org.jdesktop.swingx.image.GaussianBlurFilter;
+//import org.jdesktop.swingx.image.GaussianBlurFilter;
 
-import flanagan.complex.ComplexMatrix;
-import icy.image.IcyBufferedImage;
-import icy.image.colormodel.IcyColorModel;
+//import flanagan.complex.ComplexMatrix;
+import icy.gui.dialog.MessageDialog;
+import icy.gui.frame.progress.AnnounceFrame;
+//import icy.image.IcyBufferedImage;
+//import icy.image.colormodel.IcyColorModel;
 import icy.sequence.Sequence;
-import icy.type.DataType;
+//import icy.type.DataType;
 import plugins.adufour.ezplug.*;
 
 public class CurvilinearStructures extends EzPlug {
@@ -28,7 +30,7 @@ public class CurvilinearStructures extends EzPlug {
 	Neuriteness2D neu = null;
 	
 	
-	EzVarInteger blur = new EzVarInteger("Radius of blur",1,0,10,1);
+//	EzVarInteger blur = new EzVarInteger("Radius of blur",1,0,10,1);
 	EzVarBoolean vesselness = new EzVarBoolean("Compute Vesselness?",true);
 	EzVarBoolean neuriteness = new EzVarBoolean("Compute neuriteness?",true);
 	EzVarDouble betaThreshold =new EzVarDouble("Disparsity control",0,-50,50,0.05);
@@ -50,7 +52,7 @@ public class CurvilinearStructures extends EzPlug {
 	
 	@Override
 	protected void initialize() {
-		addEzComponent(blur);
+//		addEzComponent(blur);
 		addEzComponent(outputGroup);
 		addEzComponent(vesGroup);
 //		addEzComponent(neuGroup);
@@ -62,9 +64,16 @@ public class CurvilinearStructures extends EzPlug {
 	protected void execute() {
 		ves = null;
 		neu = null;
+		triggerStart();
 //		GaussianBlurFilter gauss = new GaussianBlurFilter(blur.getValue());
 //		BufferedImage img = (BufferedImage)getGrayScale(gauss.filter(getActiveImage(), null));
-		BufferedImage img = getActiveImage();//= gauss.filter(getActiveImage(), null);
+		BufferedImage img = /*gauss.filter(*/getActiveImage();//, null);
+		if(img == null) {
+			MessageDialog.showDialog("This plugin needs opened image.");
+			return;
+		} else {
+			new AnnounceFrame("Plugin runs on image "+ getActiveSequence().getName());
+		}
 		double[] scs = {scaleKernels.getValue()};
 		{
 			int tmp = 1;
@@ -88,28 +97,48 @@ public class CurvilinearStructures extends EzPlug {
 		for(int i=0;i<ors.length;i++){
 			ors[i] = ((double)(i)/ors.length*Math.PI);
 		}
-		
+//		long time;
 		if(vesselness.getValue()){
+//			time = System.nanoTime();
+			
 			ves = new Vesselness2D(img, betaThreshold.getValue(), gammaThreshold.getValue());
 			addSequence(new Sequence("Vesselness",ves.makeImage2D()));
+			
+//			time = System.nanoTime() - time;
+//			System.out.println("Time of computing Vesselness is " + time/(10.0*100000) + "ns");
 		}
 		if(vesPhase.getValue()){
+//			time = System.nanoTime();
 			if(ves == null) ves = new Vesselness2D(img, betaThreshold.getValue(), gammaThreshold.getValue());
 			Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source,false), 
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue(),img.getWidth(),img.getHeight());
 			addSequence(new Sequence("Vesselness with phase congurency",ves.makeImageWithPhase2D()));
+			
+//			time = System.nanoTime() - time;
+//			System.out.println("Time of computing Vesselness with PCT is " + time/(10.0*100000) + "ns");
 		}
 		if(neuriteness.getValue()){
+//			time = System.nanoTime();
+			
 			neu = new Neuriteness2D(img, -1/3);
 			addSequence(new Sequence("Neuriteness",neu.makeImage2D()));
+			
+//			time = System.nanoTime() - time;
+//			System.out.println("Time of computing Neuriteness is " + time/(10.0*100000) + "ns");
 		}
 		if(neuPhase.getValue()){
+//			time = System.nanoTime();
+			
 			if(neu == null) neu = new Neuriteness2D(img, -1/3);
 			if(!vesPhase.getValue()) Filter.phaseCong = Computations.getPhaseCong(Computations.FourierTransform2D(Filter.source,true), 
 					scs, ors, threshold.getValue(), cutoffValue.getValue(), gainFactor.getValue(),img.getWidth(),img.getHeight());
 			addSequence(new Sequence("Neuriteness with phase",neu.makeImageWithPhase2D()));
+			
+//			time = System.nanoTime() - time;
+//			System.out.println("Time of computing Neuriteness with PCT is " + time/(10.0*100000) + " ns");
 		}
-		
+//		System.out.println("Memory usage - max : "+Runtime.getRuntime().maxMemory() + " bytes");
+		triggerStop();
 		/*
 		 * Toto všetko je tu len na testovanie a výpis medzivýpočtov
 		 * 
@@ -178,25 +207,16 @@ public class CurvilinearStructures extends EzPlug {
 //		ret.endUpdate();
 //		return ret;
 //	}
+	private void triggerStart(){
+		System.out.println("Trigger start");
+	}
+	
+	private void triggerStop(){
+		System.out.println("Trigger Stop");
+	}
 	
 	@Override
 	public void clean() {
 		// TODO Auto-generated by Icy4Eclipse
-	}
-	
-	private Image getGrayScale(BufferedImage original){
-//		addSequence(new Sequence("Before",original));
-//		BufferedImage image = new BufferedImage(original.getWidth(), original.getHeight(),
-//				BufferedImage.TYPE_BYTE_GRAY);  
-//		Graphics g = image.getGraphics();
-//		g.drawImage(original, 0, 0, null);
-//		g.dispose(); 
-//		addSequence(new Sequence("After",image));
-		
-		ImageFilter filter = new GrayFilter(true, 50);  
-		ImageProducer producer = new FilteredImageSource(original.getSource(), filter);  
-		Image image = Toolkit.getDefaultToolkit().createImage(producer);  
-		
-		return image;
 	}
 }

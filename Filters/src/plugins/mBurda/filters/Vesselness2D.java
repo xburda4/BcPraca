@@ -34,8 +34,8 @@ public class Vesselness2D extends Filter{
 	private double computeVesselnessForPoint(int x,int y){
 		double[] eigens = getEigenValues(x,y);
 		
-		/*if(eigens[1] < 0) return 0;
-		else */return computeVesselness(eigens);
+		if(eigens[1] < 0) return 0;
+		else return computeVesselness(eigens);
 	}
 	
 	/**
@@ -95,6 +95,7 @@ public IcyBufferedImage makeImageWithPhase2D(){
 	 }
 
 public IcyBufferedImage makeImage2D(){
+	
 	IcyBufferedImage ret = new IcyBufferedImage(source.getWidth(),source.getHeight(),IcyColorModel.createInstance(1, DataType.DOUBLE));
 	ret.beginUpdate();
 	
@@ -105,6 +106,7 @@ public IcyBufferedImage makeImage2D(){
 		}
 	}
 	ret.endUpdate();
+	
 	return ret;
  }
 }
